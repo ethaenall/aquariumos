@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#072f3f" />
+    <meta
+      name="description"
+      content="AquariumOS — a tiny operating system living beneath the surface. Fish drift behind glass windows in a browser desktop."
+    />
+    <title>AquariumOS</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,560;0,9..144,650;1,9..144,560&family=Outfit:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="aquarium" aria-hidden="true">
+      <canvas id="tank" class="tank"></canvas>
+      <div class="water-surface"></div>
+      <div class="light-rays"></div>
+      <div class="caustics"></div>
+      <div class="vignette"></div>
+
+      <svg class="kelp kelp-left" viewBox="0 0 180 520" preserveAspectRatio="xMidYMax meet">
+        <path class="frond f1" d="M78 520 C 70 430, 118 380, 86 300 C 52 220, 120 170, 74 90 C 50 40, 88 16, 82 0" />
+        <path class="frond f2" d="M48 520 C 28 400, 86 350, 40 250 C 8 170, 78 130, 36 40" />
+        <path class="frond f3" d="M118 520 C 132 410, 78 360, 128 250 C 168 160, 96 110, 140 20" />
+      </svg>
+
+      <svg class="kelp kelp-right" viewBox="0 0 180 480" preserveAspectRatio="xMidYMax meet">
+        <path class="frond f4" d="M96 480 C 120 380, 62 330, 110 230 C 154 140, 78 90, 122 10" />
+        <path class="frond f5" d="M54 480 C 36 370, 96 320, 48 210 C 10 120, 80 80, 42 8" />
+      </svg>
+
+      <div class="seabed">
+        <svg class="rocks" viewBox="0 0 900 140" preserveAspectRatio="none">
+          <path d="M0 140 C 40 120, 70 96, 120 108 C 150 70, 210 78, 240 102 C 280 64, 340 72, 380 108 C 430 80, 500 86, 540 112 C 590 70, 660 78, 710 108 C 760 86, 820 96, 900 84 L 900 140 Z" fill="#1a2c28" opacity="0.55" />
+          <path d="M0 140 C 60 128, 110 112, 170 122 C 210 98, 280 104, 330 124 C 390 100, 470 108, 530 126 C 600 104, 690 110, 760 126 C 820 116, 870 122, 900 118 L 900 140 Z" fill="#243832" />
+          <ellipse cx="210" cy="118" rx="46" ry="18" fill="#3a4e46" />
+          <ellipse cx="430" cy="124" rx="38" ry="14" fill="#2f433c" />
+          <ellipse cx="690" cy="122" rx="52" ry="16" fill="#354940" />
+        </svg>
+        <svg class="coral" viewBox="0 0 900 140" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+          <path d="M118 132 C 112 108, 96 96, 108 78 C 122 92, 128 108, 124 132 Z" fill="#c97b6a" />
+          <path d="M132 132 C 140 110, 158 98, 148 76 C 134 90, 128 112, 132 132 Z" fill="#d48978" />
+          <path d="M108 132 C 98 114, 86 104, 92 82 C 108 96, 114 116, 112 132 Z" fill="#b86b5c" />
+          <path d="M760 134 C 748 112, 732 104, 742 80 C 760 94, 768 114, 762 134 Z" fill="#c97b6a" />
+          <path d="M776 134 C 786 116, 804 102, 792 78 C 776 94, 770 116, 776 134 Z" fill="#e0a090" />
+          <g class="star">
+            <path d="M510 118 L516 108 L522 118 L533 120 L524 128 L526 140 L516 134 L506 140 L508 128 L499 120 Z" fill="#d9a15c" />
+          </g>
+        </svg>
+        <div class="sand"></div>
+      </div>
+    </div>
+
+    <header class="menubar">
+      <button type="button" class="logo" aria-label="Open About AquariumOS">
+        <svg class="logo-mark" viewBox="0 0 32 20" aria-hidden="true">
+          <ellipse cx="18" cy="10" rx="9.5" ry="6.2" fill="url(#logoFish)" />
+          <path d="M8.5 10 L1.5 4.5 V15.5 Z" fill="#7ee0d6" />
+          <circle cx="22.5" cy="8.2" r="1.15" fill="#07232c" />
+          <circle cx="22.85" cy="7.9" r="0.4" fill="#e8fbf7" />
+          <defs>
+            <linearGradient id="logoFish" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#9cf2e8" />
+              <stop offset="100%" stop-color="#3aa89c" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="logo-type">AquariumOS</span>
+      </button>
+      <div class="status-cluster">
+        <span id="tank-readout" class="tank-readout" aria-label="Tank conditions">12.4 m · 24°C</span>
+        <time id="clock" class="clock" datetime=""></time>
+      </div>
+    </header>
+
+    <main id="desktop" class="desktop"></main>
+
+    <nav class="dock" aria-label="AquariumOS applications">
+      <div class="dock-glass">
+        <button class="dock-item" data-app="notes" aria-label="Open Notes">
+          <span class="dock-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48">
+              <path d="M10 28c2-10 8-18 14-22 6 4 12 12 14 22-4 8-8 12-14 14-6-2-10-6-14-14z" fill="#f2d2b6" />
+              <path d="M16 27c2 1 6 2 8 8 2-6 6-7 8-8-2-7-5-11-8-14-3 3-6 7-8 14z" fill="#e8b992" />
+              <path d="M24 8c1.4 3 2 7 1.2 11" stroke="#c48963" stroke-width="1.4" fill="none" />
+            </svg>
+          </span>
+          <span class="dock-label">Notes</span>
+        </button>
+        <button class="dock-item" data-app="calculator" aria-label="Open Calculator">
+          <span class="dock-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48">
+              <rect x="11" y="8" width="26" height="32" rx="8" fill="#7d8f86" />
+              <rect x="15" y="12" width="18" height="8" rx="3" fill="#cfe7df" />
+              <circle cx="18" cy="27" r="2.1" fill="#e8f7f2" />
+              <circle cx="24" cy="27" r="2.1" fill="#e8f7f2" />
+              <circle cx="30" cy="27" r="2.1" fill="#e8f7f2" />
+              <circle cx="18" cy="33.5" r="2.1" fill="#e8f7f2" />
+              <circle cx="24" cy="33.5" r="2.1" fill="#9ce0d2" />
+              <circle cx="30" cy="33.5" r="2.1" fill="#e8f7f2" />
+            </svg>
+          </span>
+          <span class="dock-label">Calculator</span>
+        </button>
+        <button class="dock-item" data-app="music" aria-label="Open Music">
+          <span class="dock-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48">
+              <path d="M24 8c7 0 12 5 12 11 0 8-6 12-12 20C18 31 12 27 12 19 12 13 17 8 24 8z" fill="#9fd6e8" />
+              <path d="M24 12c4.6 0 8 3.2 8 7.4 0 5.5-4 8.4-8 14.1-4-5.7-8-8.6-8-14.1C16 15.2 19.4 12 24 12z" fill="#d7f3fb" opacity="0.7" />
+              <path d="M18 30 c2 6 4 9 6 12 c2-3 4-6 6-12" stroke="#7fb7c8" stroke-width="1.4" fill="none" opacity="0.8" />
+            </svg>
+          </span>
+          <span class="dock-label">Music</span>
+        </button>
+        <button class="dock-item" data-app="about" aria-label="Open About AquariumOS">
+          <span class="dock-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48">
+              <path d="M10 30c2-12 8-20 14-22 6 2 12 10 14 22-4 6-9 10-14 11-5-1-10-5-14-11z" fill="#c9d6d2" />
+              <circle cx="24" cy="27" r="7.5" fill="#f3f7f4" />
+              <circle cx="24" cy="27" r="4.6" fill="#b7ece3" />
+              <circle cx="26.2" cy="25" r="1.4" fill="#ffffff" />
+            </svg>
+          </span>
+          <span class="dock-label">About</span>
+        </button>
+      </div>
+    </nav>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
