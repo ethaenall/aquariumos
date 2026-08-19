@@ -1,0 +1,15 @@
+---
+description: Keep AquariumOS free of personal data and ready to ship for GitHub credit
+alwaysApply: true
+---
+
+# Ship-safe
+
+Before editing README, About copy, screenshots, or committing:
+
+1. Run `python3 scripts/ship-safe.py`
+2. Never put email, phone, school, home path, or a legal name in tracked files
+3. Credit the author as GitHub user `ethaenall` only
+4. Live demo is https://ethaenall.github.io/aquariumos/ — never use the repo as the demo
+5. Cover is `assets/screenshot.png`. Share crop is `assets/cover.png`
+6. README must describe the live WebOS 1 demo, not unreleased WebOS 2 work
