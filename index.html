@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#072f3f" />
     <meta
       name="description"
-      content="AquariumOS — a tiny operating system living beneath the surface. Fish drift behind glass windows in a browser desktop."
+      content="AquariumOS — a tiny operating system living beneath the surface. Feed the fish, change the tide, and float glass windows in the tank."
     />
     <title>AquariumOS</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
@@ -76,15 +76,27 @@
         <span class="logo-type">AquariumOS</span>
       </button>
       <div class="status-cluster">
+        <button type="button" id="tide-toggle" class="tide-toggle" aria-label="Cycle day, dusk, and night lighting">Day</button>
         <span id="tank-readout" class="tank-readout" aria-label="Tank conditions">12.4 m · 24°C</span>
         <time id="clock" class="clock" datetime=""></time>
       </div>
     </header>
 
     <main id="desktop" class="desktop"></main>
+    <div id="snap-ghost" class="snap-ghost" hidden></div>
 
     <nav class="dock" aria-label="AquariumOS applications">
       <div class="dock-glass">
+        <button class="dock-item" data-action="feed" aria-label="Sprinkle fish food">
+          <span class="dock-icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48">
+              <ellipse cx="18" cy="28" rx="7" ry="4" fill="#e8b05c" transform="rotate(-28 18 28)" />
+              <ellipse cx="28" cy="22" rx="6" ry="3.4" fill="#f0c878" transform="rotate(18 28 22)" />
+              <ellipse cx="32" cy="31" rx="5" ry="3" fill="#d4924a" transform="rotate(-8 32 31)" />
+            </svg>
+          </span>
+          <span class="dock-label">Feed</span>
+        </button>
         <button class="dock-item" data-app="notes" aria-label="Open Notes">
           <span class="dock-icon" aria-hidden="true">
             <svg viewBox="0 0 48 48">

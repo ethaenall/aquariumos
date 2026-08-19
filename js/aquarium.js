@@ -29,10 +29,12 @@ class Fish {
     this.belly = species.belly;
     this.fin = species.fin;
     this.size = species.size * 1.12;
+    this.baseSize = this.size;
     this.speed = species.speed;
+    this.full = 1;
   }
 
-  update(width, height, mouse, time, current) {
+  update(width, height, mouse, time, current, foods) {
     const max = this.reduceMotion ? this.speed * 0.28 : this.speed;
     this.theta += (Math.random() - 0.5) * (this.reduceMotion ? 0.01 : 0.045);
     this.vx += Math.cos(this.theta) * 0.025;
@@ -46,10 +48,33 @@ class Fish {
     if (this.y < marginTop) this.vy += 0.05;
     if (this.y > height - marginBottom) this.vy -= 0.06;
 
+    let hunting = false;
+    let nearest = null;
+    let nearestDist = Infinity;
+    foods.forEach((flake) => {
+      if (flake.eaten) return;
+      const dist = Math.hypot(flake.x - this.x, flake.y - this.y);
+      if (dist < nearestDist) {
+        nearest = flake;
+        nearestDist = dist;
+      }
+    });
+    if (nearest && nearestDist < 260 && nearestDist > 0.001) {
+      hunting = true;
+      this.vx += ((nearest.x - this.x) / nearestDist) * 0.09;
+      this.vy += ((nearest.y - this.y) / nearestDist) * 0.09;
+      if (nearestDist < this.size + 8) {
+        nearest.eaten = true;
+        this.full = Math.min(1.22, this.full + 0.045);
+        this.size = this.baseSize * this.full;
+        this.ateAt = { x: this.x, y: this.y, t: time };
+      }
+    }
+
     // Unique WebOS 1 feature: nearby fish turn aside instead of swimming through the cursor.
     this.fleeing = false;
-    let cap = max;
-    if (mouse.on) {
+    let cap = hunting ? max * 1.4 : max;
+    if (mouse.on && !hunting) {
       const dx = this.x - mouse.x;
       const dy = this.y - mouse.y;
       const dist = Math.hypot(dx, dy);
@@ -226,11 +251,13 @@ export function startAquarium(canvas) {
   const jellies = [];
   const bubbles = [];
   const motes = [];
+  const foods = [];
   const ripples = [];
   let width = 0;
   let height = 0;
   let raf = 0;
   let lastRipple = 0;
+  let tide = "day";
 
   function resize() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -317,9 +344,44 @@ export function startAquarium(canvas) {
     }
 
     fish.forEach((item) => {
-      item.update(width, height, mouse, time, current);
+      item.update(width, height, mouse, time, current, foods);
       item.draw(ctx, time);
+      if (item.ateAt && time - item.ateAt.t < 420) {
+        const age = (time - item.ateAt.t) / 420;
+        ctx.beginPath();
+        ctx.arc(item.ateAt.x, item.ateAt.y - age * 18, 3 + age * 4, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.45 * (1 - age)})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
     });
+
+    for (let i = foods.length - 1; i >= 0; i -= 1) {
+      const flake = foods[i];
+      if (flake.eaten) {
+        foods.splice(i, 1);
+        continue;
+      }
+      flake.y += flake.vy;
+      flake.x += Math.sin(time * 0.003 + flake.wobble) * 0.4;
+      if (flake.y > height - 86) {
+        flake.y = height - 86;
+        flake.vy = 0;
+        flake.life = (flake.life ?? 1) - 0.004;
+        if (flake.life <= 0) {
+          foods.splice(i, 1);
+          continue;
+        }
+      }
+      ctx.fillStyle = `rgba(232, 176, 92, ${0.85 * (flake.life ?? 1)})`;
+      ctx.beginPath();
+      ctx.ellipse(flake.x, flake.y, flake.r, flake.r * 0.55, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+      ctx.beginPath();
+      ctx.ellipse(flake.x - 0.8, flake.y - 0.6, flake.r * 0.35, flake.r * 0.2, 0.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     bubbles.forEach((bubble) => {
       bubble.y -= bubble.vy;
@@ -330,6 +392,14 @@ export function startAquarium(canvas) {
       }
       drawBubble(bubble);
     });
+
+    if (tide === "dusk") {
+      ctx.fillStyle = "rgba(48, 22, 8, 0.2)";
+      ctx.fillRect(0, 0, width, height);
+    } else if (tide === "night") {
+      ctx.fillStyle = "rgba(2, 8, 22, 0.42)";
+      ctx.fillRect(0, 0, width, height);
+    }
 
     raf = window.requestAnimationFrame(frame);
   }
@@ -358,9 +428,29 @@ export function startAquarium(canvas) {
   window.addEventListener("pointerleave", onLeave);
   raf = window.requestAnimationFrame(frame);
 
-  return () => {
-    window.cancelAnimationFrame(raf);
-    window.removeEventListener("pointermove", onMove);
-    window.removeEventListener("pointerleave", onLeave);
+  return {
+    dropFood(x, y) {
+      const count = 4 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < count; i += 1) {
+        if (foods.length >= 22) break;
+        foods.push({
+          x: x + rand(-22, 22),
+          y: y + rand(-10, 10),
+          vy: rand(0.35, 0.85),
+          r: rand(2.1, 3.8),
+          wobble: rand(0, 8),
+          eaten: false,
+          life: 1,
+        });
+      }
+    },
+    setTide(next) {
+      tide = next;
+    },
+    destroy() {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerleave", onLeave);
+    },
   };
 }

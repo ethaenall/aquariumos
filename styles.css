@@ -219,7 +219,8 @@ button {
 
 .logo,
 .clock,
-.tank-readout {
+.tank-readout,
+.tide-toggle {
   pointer-events: auto;
 }
 
@@ -227,6 +228,20 @@ button {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.tide-toggle {
+  font: inherit;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(8, 32, 42, 0.28);
+  border: 1px solid rgba(180, 230, 226, 0.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--foam);
+  cursor: pointer;
 }
 
 .tank-readout {
@@ -240,6 +255,28 @@ button {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   color: var(--mist);
+}
+
+.snap-ghost {
+  position: fixed;
+  top: var(--menubar-h);
+  bottom: var(--dock-h);
+  z-index: 9;
+  width: calc(50% - 10px);
+  pointer-events: none;
+  border-radius: 18px;
+  background: rgba(126, 224, 214, 0.12);
+  border: 1px solid rgba(210, 250, 246, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.snap-ghost[data-side="left"] {
+  left: 8px;
+}
+
+.snap-ghost[data-side="right"] {
+  right: 8px;
+  left: auto;
 }
 
 .logo {
@@ -285,6 +322,7 @@ button {
   position: fixed;
   inset: var(--menubar-h) 0 var(--dock-h) 0;
   z-index: 10;
+  cursor: cell;
 }
 
 .window {
@@ -322,6 +360,38 @@ button {
 
 .window.is-closing {
   animation: window-out 0.22s ease forwards;
+}
+
+.window.is-minimized {
+  display: none !important;
+  animation: none;
+}
+
+.window.is-max {
+  border-radius: 12px;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.window-bead {
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2), 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.window-min {
+  background: radial-gradient(circle at 35% 30%, #fff 0 16%, #d7c4a3 42%, #9a7d55 100%);
+}
+
+.window-max {
+  background: radial-gradient(circle at 35% 30%, #fff 0 16%, #9fe0d4 42%, #3aa89c 100%);
 }
 
 .window-titlebar {
@@ -852,6 +922,33 @@ button {
 .tank-hint.is-gone {
   opacity: 0;
   transition: opacity 0.35s ease;
+}
+
+body[data-tide="dusk"] .aquarium {
+  background:
+    radial-gradient(ellipse 90% 55% at 50% -8%, rgba(232, 150, 90, 0.32), transparent 58%),
+    radial-gradient(ellipse 45% 35% at 18% 78%, rgba(24, 92, 82, 0.28), transparent 70%),
+    linear-gradient(180deg, #8a4a38 0%, #12384a 32%, #041e2a 72%, #021016 100%);
+}
+
+body[data-tide="dusk"] .light-rays {
+  opacity: 0.55;
+}
+
+body[data-tide="night"] .aquarium {
+  background:
+    radial-gradient(circle at 78% 10%, rgba(230, 240, 255, 0.28) 0 1.5%, rgba(180, 210, 255, 0.08) 6%, transparent 18%),
+    radial-gradient(ellipse 50% 40% at 78% 4%, rgba(180, 210, 255, 0.18), transparent 46%),
+    linear-gradient(180deg, #061525 0%, #031018 40%, #01080e 100%);
+}
+
+body[data-tide="night"] .light-rays,
+body[data-tide="night"] .caustics {
+  opacity: 0.18;
+}
+
+body[data-tide="night"] .water-surface {
+  opacity: 0.35;
 }
 
 @media (prefers-reduced-motion: reduce) {

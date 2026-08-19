@@ -2,7 +2,7 @@
 
 Post these on your Stardance **project page**, not in the About app. Each one needs its screenshot.
 
-This checkpoint is **WebOS 1** (fixed payout). Post logs 1–3, then ship. Do not post logs 4–6 until WebOS 1 has shipped.
+WebOS 1 is a fixed payout. Ratings happen on the **WebOS 2** ship, so post 1–3 first, ship WebOS 1, then post 4–6 and ship again.
 
 Keep them short. First sentence = what changed.
 
@@ -32,9 +32,9 @@ I wanted the cursor to feel like something in the water, not a pointer on top of
 
 ---
 
-## After WebOS 1 ships — WebOS 2 (do not post yet)
+## After WebOS 1 ships — WebOS 2 (this is the rated one)
 
-These live on the `webos-2` branch. Voters score originality, technicality, usability, and storytelling on the WebOS 2 ship.
+Voters score originality, technicality, usability, and storytelling. These three features are the ones that make AquariumOS look like a tank instead of another browser desktop.
 
 ### Devlog 4 — feeding
 
@@ -60,4 +60,4 @@ Windows can minimize to the dock, fill the tank, or snap to a side if you drag t
 
 1. Create the AquariumOS project on [stardance.hackclub.com](https://stardance.hackclub.com).
 2. Post logs 1–3, attach the screenshots, ship **WebOS 1**.
-3. After that ship is in, check out `webos-2`, post logs 4–6, and ship **WebOS 2**.
+3. Post logs 4–6 (screenshot feeding, night, and a snapped window), ship **WebOS 2**.

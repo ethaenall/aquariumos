@@ -10,9 +10,11 @@ AquariumOS is a browser desktop built for the Hack Club Stardance **WebOS 1** mi
 
 - Full-screen underwater desktop with light rays, caustics, kelp, coral, and a sandy seabed
 - Animated fish, jellies, motes, and bubbles drawn behind every window
-- Fish peel away from the cursor (the extra WebOS 1 feature)
-- Aquatic glass dock for Notes, Calculator, Music, and About
-- Draggable windows with Esc to close
+- Fish peel away from the cursor and swim to food flakes
+- Click empty water or the Feed dock icon to sprinkle food
+- Day / dusk / night lighting, following the clock, with a manual cycle button
+- Aquatic glass dock for Feed, Notes, Calculator, Music, and About
+- Draggable windows with minimize, maximize, edge-snap, and Esc to close
 - Notes, calculator, and a local music player with `localStorage` persistence
 
 ## How to run locally
@@ -39,13 +41,19 @@ Any static server works, including VS Code Live Server or `npx serve`.
 
 No UI framework, accounts, or analytics.
 
-## Stardance
+## WebOS 1 and WebOS 2
 
-Ship this tree as **WebOS 1**. The extra feature is fish reacting to the cursor.
+Stardance WebOS 1 needs a custom desktop, draggable windows, and one extra feature. The extra here is fish reacting to the cursor.
 
-WebOS 2 work (feeding, day/dusk/night, minimize/maximize/snap) lives on the `webos-2` branch. Do not include those in the first ship, or they will not count as the three new WebOS 2 features.
+WebOS 2 needs at least three new features beyond that first ship. AquariumOS uses the three that score hardest on originality and usability:
 
-Post the three logs in `DEVLOGS.md` on the Stardance project page.
+1. Fish feeding
+2. Day / dusk / night lighting
+3. Minimize, maximize, and edge-snap
+
+Voters rate originality, technicality, usability, and storytelling. Feeding and tides are what make this an aquarium OS instead of another taskbar clone. Window controls make it feel usable in the first minute.
+
+**Ship WebOS 1 first** with the three logs in `DEVLOGS.md` (fixed payout). Then post the WebOS 2 logs and ship again for community ratings.
 
 ## Replace the music track
 
@@ -73,6 +81,10 @@ python3 scripts/generate-tide-lights.py
     generate-tide-lights.py
 ```
 
+## Devlogs
+
+Stardance needs three progress posts on the project page. Copy from `DEVLOGS.md` and attach the screenshots in `assets/devlogs/`.
+
 ## Deploy
 
-Upload this folder to any static host (GitHub Pages, Netlify, Cloudflare Pages, or similar). Keep `index.html` at the site root.
+Upload the folder to any static host (GitHub Pages, Netlify, Cloudflare Pages, or similar). Keep `index.html` at the site root.

@@ -318,7 +318,11 @@ function createAbout() {
       This desktop is an aquarium first and a computer second. Fish drift behind glass windows,
       peel away from the cursor, and the dock sits like a smooth stone on the sand.
     </p>
-    <p class="about-copy">Hack Club Stardance · WebOS 1.</p>
+    <p class="about-copy">
+      Click empty water to sprinkle food. Cycle Day / Dusk / Night from the top bar.
+      Drag a window to the edge to dock it. The tank starts empty so the fish can show off.
+    </p>
+    <p class="about-copy">Hack Club Stardance · WebOS 1 and the start of WebOS 2.</p>
   `;
   return wrap;
 }

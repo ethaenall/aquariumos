@@ -32,6 +32,7 @@ export class WindowManager {
   open(app) {
     const existing = this.windows.get(app.id);
     if (existing) {
+      if (existing.minimized) this.restore(app.id);
       this.focus(app.id);
       existing.el.classList.remove("is-nudge");
       void existing.el.offsetWidth;
@@ -50,7 +51,11 @@ export class WindowManager {
     el.innerHTML = `
       <header class="window-titlebar">
         <span class="window-title" id="${app.id}-title">${app.title}</span>
-        <button class="window-close" type="button" aria-label="Close ${app.title}"></button>
+        <div class="window-controls">
+          <button class="window-bead window-min" type="button" aria-label="Minimize ${app.title}"></button>
+          <button class="window-bead window-max" type="button" aria-label="Maximize ${app.title}"></button>
+          <button class="window-bead window-close" type="button" aria-label="Close ${app.title}"></button>
+        </div>
       </header>
       <div class="window-body"></div>
     `;
@@ -70,7 +75,7 @@ export class WindowManager {
       : desktop.top + (app.top ?? 0.05 + origin * 0.08) * desktop.height;
     this.place(el, x, y, el.offsetWidth, el.offsetHeight);
 
-    const record = { el, app };
+    const record = { el, app, minimized: false, maximized: false, restoreBox: null };
     this.windows.set(app.id, record);
     this.bind(record);
     this.focus(app.id);
@@ -82,28 +87,46 @@ export class WindowManager {
     const { el, app } = record;
     const titlebar = el.querySelector(".window-titlebar");
     const close = el.querySelector(".window-close");
+    const min = el.querySelector(".window-min");
+    const max = el.querySelector(".window-max");
 
     el.addEventListener("pointerdown", () => this.focus(app.id));
     close.addEventListener("click", (event) => {
       event.stopPropagation();
       this.close(app.id);
     });
+    min.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.minimize(app.id);
+    });
+    max.addEventListener("click", (event) => {
+      event.stopPropagation();
+      this.toggleMax(app.id);
+    });
 
     let drag = null;
     titlebar.addEventListener("pointerdown", (event) => {
       if (event.button !== 0 && event.pointerType === "mouse") return;
-      if (event.target.closest(".window-close")) return;
+      if (event.target.closest(".window-controls")) return;
       this.focus(app.id);
+      if (record.maximized) this.toggleMax(app.id);
       const rect = el.getBoundingClientRect();
       drag = {
         offsetX: event.clientX - rect.left,
         offsetY: event.clientY - rect.top,
+        startX: event.clientX,
+        startY: event.clientY,
+        moved: false,
       };
       titlebar.setPointerCapture(event.pointerId);
     });
 
     titlebar.addEventListener("pointermove", (event) => {
       if (!drag) return;
+      if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 5) {
+        drag.moved = true;
+      }
+      if (!drag.moved) return;
       this.place(
         el,
         event.clientX - drag.offsetX,
@@ -111,14 +134,119 @@ export class WindowManager {
         el.offsetWidth,
         el.offsetHeight,
       );
+      this.showSnapHint(event.clientX);
     });
 
-    const endDrag = () => {
-      if (drag) this.remember(app.id, el);
+    const endDrag = (event) => {
+      if (!drag) return;
+      if (drag.moved) {
+        this.applySnap(record, event.clientX);
+        this.remember(app.id, el);
+      }
+      this.hideSnapHint();
       drag = null;
     };
     titlebar.addEventListener("pointerup", endDrag);
     titlebar.addEventListener("pointercancel", endDrag);
+    titlebar.addEventListener("dblclick", (event) => {
+      if (event.target.closest(".window-controls")) return;
+      this.toggleMax(app.id);
+    });
+  }
+
+  showSnapHint(clientX) {
+    const ghost = document.querySelector("#snap-ghost");
+    const desktop = this.desktop.getBoundingClientRect();
+    if (!ghost) return;
+    const edge = 36;
+    if (clientX <= desktop.left + edge) {
+      ghost.hidden = false;
+      ghost.dataset.side = "left";
+    } else if (clientX >= desktop.right - edge) {
+      ghost.hidden = false;
+      ghost.dataset.side = "right";
+    } else {
+      ghost.hidden = true;
+      delete ghost.dataset.side;
+    }
+  }
+
+  hideSnapHint() {
+    const ghost = document.querySelector("#snap-ghost");
+    if (ghost) ghost.hidden = true;
+  }
+
+  applySnap(record, clientX) {
+    const desktop = this.desktop.getBoundingClientRect();
+    const edge = 36;
+    if (clientX <= desktop.left + edge) this.snap(record, "left");
+    else if (clientX >= desktop.right - edge) this.snap(record, "right");
+  }
+
+  snap(record, side) {
+    const { el } = record;
+    record.maximized = false;
+    el.classList.remove("is-max");
+    el.style.top = "0px";
+    el.style.width = "50%";
+    el.style.height = "100%";
+    el.style.left = side === "left" ? "0px" : "50%";
+    el.querySelector(".window-max")?.setAttribute("aria-label", `Maximize ${record.app.title}`);
+  }
+
+  captureBox(el) {
+    return {
+      left: el.style.left,
+      top: el.style.top,
+      width: el.style.width,
+      height: el.style.height,
+    };
+  }
+
+  minimize(id) {
+    const record = this.windows.get(id);
+    if (!record) return;
+    record.minimized = true;
+    record.el.classList.add("is-minimized");
+    const remaining = [...this.windows.values()].filter((item) => !item.minimized).at(-1);
+    this.focused = remaining?.app.id ?? null;
+    if (remaining) this.focus(remaining.app.id);
+    else this.onChange();
+  }
+
+  toggleMax(id) {
+    const record = this.windows.get(id);
+    if (!record) return;
+    if (record.maximized) {
+      record.maximized = false;
+      record.el.classList.remove("is-max");
+      const box = record.restoreBox;
+      if (box) {
+        record.el.style.left = box.left;
+        record.el.style.top = box.top;
+        record.el.style.width = box.width;
+        record.el.style.height = box.height;
+      }
+      record.el.querySelector(".window-max")?.setAttribute("aria-label", `Maximize ${record.app.title}`);
+    } else {
+      record.restoreBox = this.captureBox(record.el);
+      record.maximized = true;
+      record.el.classList.add("is-max");
+      record.el.style.left = "0px";
+      record.el.style.top = "0px";
+      record.el.style.width = "100%";
+      record.el.style.height = "100%";
+      record.el.querySelector(".window-max")?.setAttribute("aria-label", `Restore ${record.app.title}`);
+    }
+    this.focus(id);
+  }
+
+  restore(id) {
+    const record = this.windows.get(id);
+    if (!record) return;
+    record.minimized = false;
+    record.el.classList.remove("is-minimized");
+    this.focus(id);
   }
 
   place(el, x, y, width, height) {
@@ -165,7 +293,7 @@ export class WindowManager {
     if (cleanup && typeof cleanup.cleanup === "function") cleanup.cleanup();
 
     this.windows.delete(id);
-    const remaining = [...this.windows.values()].at(-1);
+    const remaining = [...this.windows.values()].filter((item) => !item.minimized).at(-1);
     this.focused = remaining?.app.id ?? null;
     if (remaining) this.focus(remaining.app.id);
     else this.onChange();
