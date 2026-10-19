@@ -1,4 +1,4 @@
-const STAGE_AT = [0, 2, 6, 12];
+export const STAGE_AT = [0, 2, 6, 12];
 const SCHOOL_KEY = "aquariumos.school";
 
 export const LINES = [
@@ -81,12 +81,17 @@ export function rand(min, max) {
   return min + Math.random() * (max - min);
 }
 
-function stageFromMeals(meals) {
+export function stageFromMeals(meals) {
   let stage = 0;
   STAGE_AT.forEach((need, index) => {
     if (meals >= need) stage = index;
   });
   return stage;
+}
+
+export function mealsToNext(meals) {
+  const next = STAGE_AT[stageFromMeals(meals) + 1];
+  return next === undefined ? 0 : next - meals;
 }
 
 function mixHex(from, to, t) {
@@ -650,6 +655,39 @@ const FORMS = {
 
 const FISH_SCALE = 1.28;
 
+// Still portrait of one stage, for the Field Guide and Sonar. Undiscovered
+// forms paint as a dark silhouette so the shape is a hint, not a spoiler.
+export function paintPortrait(canvas, look, size, hidden = false) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(size * dpr);
+  canvas.height = Math.round(size * dpr);
+  const g = canvas.getContext("2d");
+  const tall = look.form === "horse";
+  const s = size / (tall ? 3.1 : 3.4);
+  g.setTransform(dpr, 0, 0, dpr, size * (tall ? 0.5 : 0.56) * dpr, size * (tall ? 0.56 : 0.52) * dpr);
+  g.clearRect(-size, -size, size * 2, size * 2);
+  const paint = FORMS[look.form] || drawClassic;
+  paint(g, s, 0.12, {
+    body: look.body,
+    belly: look.belly,
+    fin: look.fin,
+    accent: look.accent,
+    depth: look.depth,
+    pattern: look.pattern,
+    tail: look.tail,
+    tailLen: look.tailLen,
+    tailSpread: look.tailSpread,
+    swim: 0.6,
+    flap: 0.4,
+  });
+  if (!hidden) return;
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalCompositeOperation = "source-atop";
+  g.fillStyle = "rgba(6, 26, 36, 0.94)";
+  g.fillRect(0, 0, canvas.width, canvas.height);
+  g.globalCompositeOperation = "source-over";
+}
+
 export class Fish {
   constructor(width, height, line, reduceMotion, meals = 0) {
     this.line = line;
@@ -705,14 +743,14 @@ export class Fish {
     const next = stageFromMeals(this.meals);
     if (next !== this.stage) {
       this.applyStage(next);
-      this.evolvedAt = { x: this.x, y: this.y, t: time, from: before, to: this.name };
+      this.evolvedAt = { x: this.x, y: this.y, t: time, from: before, to: this.name, slot: this.slot };
       return this.evolvedAt;
     }
     this.size = this.grownSize(this.look());
     return null;
   }
 
-  update(width, height, mouse, time, current, foods, floor) {
+  update(width, height, mouse, time, current, foods, floor, lure = 0) {
     const max = this.reduceMotion ? this.speed * 0.28 : this.speed;
     this.theta += (Math.random() - 0.5) * (this.reduceMotion ? 0.01 : 0.045);
     this.vx += Math.cos(this.theta) * 0.025;
@@ -763,14 +801,29 @@ export class Fish {
     }
 
     this.fleeing = false;
-    let cap = hunting ? max * 1.55 : max;
-    if (mouse.on && !hunting) {
+    let cap = hunting ? max * 1.55 : max * (1 + lure * 0.6);
+    // At night the cursor is a lantern: fish drift in and circle the light.
+    if (mouse.on && !hunting && lure > 0) {
+      const dx = mouse.x - this.x;
+      const dy = mouse.y - this.y;
+      const dist = Math.hypot(dx, dy);
+      const reach = 420 + this.drawn * 2;
+      if (dist < reach && dist > 0.001) {
+        const ring = 58 + this.drawn * 1.6;
+        const pull = ((dist - ring) / reach) * 0.09 * lure;
+        const swirl = 0.03 * lure * (this.z > 0.5 ? 1 : -1);
+        this.vx += (dx / dist) * pull - (dy / dist) * swirl;
+        this.vy += (dy / dist) * pull + (dx / dist) * swirl;
+      }
+    }
+
+    if (mouse.on && !hunting && lure < 1) {
       const dx = this.x - mouse.x;
       const dy = this.y - mouse.y;
       const dist = Math.hypot(dx, dy);
       const radius = 128 + this.drawn;
       if (dist < radius && dist > 0.001) {
-        const falloff = (1 - dist / radius) ** 2;
+        const falloff = (1 - dist / radius) ** 2 * (1 - lure);
         const force = 0.28 * falloff;
         this.vx += (dx / dist) * force;
         this.vy += (dy / dist) * force;

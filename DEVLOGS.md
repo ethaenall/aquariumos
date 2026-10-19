@@ -54,6 +54,18 @@ The tank follows the clock: daylight, a warmer dusk, then a darker night with a 
 
 Windows can minimize into their sand prop, fill the tank, or snap to a side if you drag them to the edge. The snap ghost is a sheet of water, not a Windows rectangle. Minimize was the usability hole — people kept losing windows behind the kelp.
 
+### Devlog 7: field guide, sonar, lantern
+
+**Attach:** a screenshot of the Field Guide open, and one at night with fish around the cursor.
+
+Feeding used to be a guess, so I added a Field Guide. It's the bottle in the sand: every fish line with all four forms, and dark silhouettes for the ones you haven't grown yet. Press `/` and Sonar opens, so you can type a fish name and the tank pings it with rings and a tag. The pings were hidden behind windows at first, so now they draw on their own layer above the glass. At night your cursor becomes a lantern and the fish swim to it instead of away. I also fixed a bug: progress was saved in depth order but loaded in line order, so fish forgot their meals after a reload.
+
+### Devlog 8: the first ten seconds
+
+**Attach:** a short screen recording of a first visit: the dive, the school gathering, then the first feed.
+
+I watched the opening the way a voter would, and it was a wall of text. The old hint popped up before the dive had finished. Now the dive plays with nothing on top, and the fish gather under the title as it fades in. After that a Dive log shows one step at a time, with a little sinking-flake ripple that shows where to click. Feed, grow a fish, ping one with Sonar, then try night. When a fish changes form, Sonar pings it so you can see who changed. You can also share `?tide=night` to send people straight to the lantern.
+
 ---
 
 ## How to post

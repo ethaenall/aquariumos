@@ -1,4 +1,11 @@
+import { createGuide } from "./guide.js";
+
 const NOTES_KEY = "aquariumos.notes";
+const context = { tank: null };
+
+export function bindTank(tank) {
+  context.tank = tank;
+}
 
 function storageGet(key) {
   try {
@@ -322,11 +329,12 @@ function createAbout() {
       and peel away from the cursor. Apps live in the sand; feeding grows fish into new forms.
     </p>
     <p class="about-copy">
-      Click empty water to sprinkle food, or tap the anemone bowl. Cycle Day / Dusk / Night
-      from the top bar. Minimize a window and its prop goes to sleep; click it to wake it.
-      The tank starts empty so the fish can show off.
+      Click empty water to sprinkle food, or tap the anemone bowl. The Field Guide bottle
+      tracks every form you've grown. Press / or ${navigator.platform?.startsWith("Mac") ? "⌘K" : "Ctrl K"} for Sonar to
+      open apps, change the tide, or ping a fish. At night your cursor is a lantern, and
+      the fish come to it.
     </p>
-    <p class="about-copy">Hack Club Stardance · WebOS 1 and the start of WebOS 2.</p>
+    <p class="about-copy">Hack Club Stardance · WebOS 2.</p>
   `;
   return wrap;
 }
@@ -335,6 +343,7 @@ const ICONS = {
   notes: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h6l2.5 2.5v8.5H4z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 7h4.5M6 9.5h4.5M6 12h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`,
   calculator: `<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="10" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="5" y="4" width="6" height="2.4" rx="0.6" fill="currentColor"/><circle cx="6" cy="9" r="0.9" fill="currentColor"/><circle cx="10" cy="9" r="0.9" fill="currentColor"/><circle cx="6" cy="11.6" r="0.9" fill="currentColor"/><circle cx="10" cy="11.6" r="0.9" fill="currentColor"/></svg>`,
   music: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 12V3.5l7-1.5V10.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="4.4" cy="12" r="1.8" fill="currentColor"/><circle cx="11.4" cy="10.5" r="1.8" fill="currentColor"/></svg>`,
+  guide: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 5.5h7.5l2.5 2.5-2.5 2.5H3z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M13 8h1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M5 8h4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>`,
   about: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 9.5Q8 1 14 9.5Q8 7 2 9.5z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 9.5Q8 15.5 14 9.5" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="9" r="1.9" fill="currentColor"/></svg>`,
 };
 
@@ -371,6 +380,17 @@ export const apps = {
     left: 0.355,
     top: 0.05,
     create: createMusic,
+  },
+  guide: {
+    id: "guide",
+    title: "Field Guide",
+    accent: "#a8c4ff",
+    icon: ICONS.guide,
+    width: 560,
+    height: 560,
+    left: 0.31,
+    top: 0.03,
+    create: () => createGuide(context.tank),
   },
   about: {
     id: "about",

@@ -1,11 +1,25 @@
 import { startAquarium } from "./aquarium.js";
 import { startWater } from "./water.js";
 import { WindowManager } from "./windows.js";
-import { apps } from "./apps.js";
+import { apps, bindTank } from "./apps.js";
+import { startSonar } from "./sonar.js";
+import { startDiveLog } from "./divelog.js";
 
 const TIDES = ["day", "dusk", "night"];
 const TIDE_LABEL = { day: "Day", dusk: "Dusk", night: "Night" };
 const TIDE_KEY = "aquariumos.tide";
+const TIDE_NOTE = {
+  day: "Bright water, fish keep their distance",
+  dusk: "Warm light through the surface",
+  night: "Your cursor becomes a lantern",
+};
+const ACTION_ICON = {
+  feed: `<svg viewBox="0 0 16 16" aria-hidden="true"><ellipse cx="8" cy="11" rx="5.5" ry="2.2" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="6" cy="5" r="1.1" fill="currentColor"/><circle cx="9.5" cy="3.5" r="0.9" fill="currentColor"/><circle cx="8.6" cy="7" r="1" fill="currentColor"/></svg>`,
+  day: `<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="currentColor"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  dusk: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 10.5a4.5 4.5 0 0 1 9 0z" fill="currentColor"/><path d="M1.5 12.5h13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`,
+  night: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.8 2.2a5.8 5.8 0 1 0 3 9.4 4.8 4.8 0 0 1-3-9.4z" fill="currentColor"/></svg>`,
+  close: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+};
 
 function tideFromClock() {
   const hour = new Date().getHours();
@@ -75,33 +89,6 @@ function showToast(text) {
   }, 2600);
 }
 
-function showHint() {
-  try {
-    if (localStorage.getItem("aquariumos.hint")) return;
-  } catch {
-    return;
-  }
-
-  const hint = document.createElement("button");
-  hint.type = "button";
-  hint.className = "tank-hint";
-  hint.textContent = "Apps live in the sand. Click empty water to feed — they grow and change.";
-  document.body.append(hint);
-
-  const dismiss = () => {
-    hint.classList.add("is-gone");
-    try {
-      localStorage.setItem("aquariumos.hint", "1");
-    } catch {
-      // Ignore.
-    }
-    window.setTimeout(() => hint.remove(), 400);
-  };
-
-  hint.addEventListener("click", dismiss);
-  window.setTimeout(dismiss, 9000);
-}
-
 function boot() {
   try {
     const canvas = document.querySelector("#tank");
@@ -109,6 +96,7 @@ function boot() {
     const clock = document.querySelector("#clock");
     const readout = document.querySelector("#tank-readout");
     const tideToggle = document.querySelector("#tide-toggle");
+    const sonarToggle = document.querySelector("#sonar-toggle");
     const propButtons = document.querySelectorAll(".sand-prop, .dock-item");
     let water = null;
     try {
@@ -117,7 +105,9 @@ function boot() {
       water = null;
     }
     document.body.classList.toggle("gl-water", Boolean(water));
-    const tank = canvas ? startAquarium(canvas, { water }) : null;
+    const veil = document.querySelector(".night-veil");
+    const tank = canvas ? startAquarium(canvas, { water, veil, overlay: document.querySelector("#sonar-layer") }) : null;
+    bindTank(tank);
     const diveTitle = document.querySelector(".dive-title");
     diveTitle?.addEventListener("animationend", () => diveTitle.remove());
     let tide = tideFromClock();
@@ -127,16 +117,33 @@ function boot() {
     } catch {
       // Ignore.
     }
+    // ?tide=night links straight to the lantern without changing the saved tide.
+    const linked = new URLSearchParams(window.location.search).get("tide");
+    if (TIDES.includes(linked)) tide = linked;
 
     if (clock) startClock(clock);
     if (readout) startReadout(readout);
     applyTide(tide, tank, tideToggle);
+    const wm = new WindowManager(desktop);
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const diveLog = startDiveLog({
+      delay: reduceMotion ? 400 : 3600,
+      onGuide: () => openApp("guide"),
+      onFinish: (x, y) => tank?.burst(x, y, 36),
+    });
+
+    tank?.onFeed(() => {
+      window.dispatchEvent(new CustomEvent("aquarium:feed"));
+    });
+    tank?.onPing((source) => {
+      if (source !== "evolve") diveLog.complete("sonar");
+    });
     tank?.onEvolve((change) => {
       const article = (word) => (/^[aeiou]/i.test(word) ? "an" : "a");
       showToast(`${article(change.from)} ${change.from} became ${article(change.to)} ${change.to}`);
+      if (change.slot !== undefined) tank.ping([change.slot], "evolve");
+      diveLog.complete("evolve");
     });
-
-    const wm = new WindowManager(desktop);
 
     function pulseProp(button) {
       button.classList.remove("is-pressed");
@@ -172,50 +179,140 @@ function boot() {
       tank?.burst(rect.left + rect.width / 2, rect.top + rect.height / 2, 22);
     };
 
-    propButtons.forEach((button) => {
-      button.addEventListener("click", () => {
+    function openApp(id, button = document.querySelector(`.sand-prop[data-app="${id}"]`)) {
+      const app = apps[id];
+      if (!app) return;
+      if (button && (!wm.isOpen(app.id) || wm.isMinimized(app.id))) {
+        const rect = button.getBoundingClientRect();
+        tank?.burst(rect.left + rect.width / 2, rect.top + rect.height * 0.35);
+      }
+      wm.open(fitWindow(wm, app));
+    }
+
+    function feedProp(button = document.querySelector(".sand-prop-feed")) {
+      if (button) {
         pulseProp(button);
-        if (button.dataset.action === "feed") {
-          button.classList.add("is-feeding");
-          window.setTimeout(() => button.classList.remove("is-feeding"), 700);
-          feedFromSand();
-          return;
-        }
-        const app = apps[button.dataset.app];
-        if (!app) return;
-        if (!wm.isOpen(app.id) || wm.isMinimized(app.id)) {
-          const rect = button.getBoundingClientRect();
-          tank?.burst(rect.left + rect.width / 2, rect.top + rect.height * 0.35);
-        }
-        wm.open(fitWindow(wm, app));
-      });
-    });
+        button.classList.add("is-feeding");
+        window.setTimeout(() => button.classList.remove("is-feeding"), 700);
+      }
+      feedFromSand();
+      diveLog.complete("feed");
+    }
 
-    desktop.addEventListener("pointerdown", (event) => {
-      if (event.target !== desktop) return;
-      tank?.dropFood(event.clientX, event.clientY);
-    });
-
-    tideToggle?.addEventListener("click", () => {
-      const index = TIDES.indexOf(tide);
-      tide = TIDES[(index + 1) % TIDES.length];
+    function setTide(next) {
+      tide = next;
       applyTide(tide, tank, tideToggle);
       try {
         localStorage.setItem(TIDE_KEY, tide);
       } catch {
         // Ignore.
       }
+    }
+
+    propButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (button.dataset.action === "feed") {
+          feedProp(button);
+          return;
+        }
+        pulseProp(button);
+        openApp(button.dataset.app, button);
+      });
+    });
+
+    function sonarSources() {
+      const entries = Object.values(apps).map((app) => ({
+        group: "app",
+        title: app.title,
+        sub: wm.isMinimized(app.id) ? "Asleep in the sand · wake it" : wm.isOpen(app.id) ? "Open · bring to front" : "Planted in the sand",
+        keywords: app.id,
+        icon: app.icon,
+        accent: app.accent,
+        verb: wm.isOpen(app.id) ? "Focus" : "Open",
+        run: () => openApp(app.id),
+      }));
+      entries.push({
+        group: "action",
+        title: "Feed the fish",
+        sub: "Sprinkle food from the surface",
+        keywords: "food sprinkle flakes",
+        icon: ACTION_ICON.feed,
+        accent: "#f0b860",
+        verb: "Feed",
+        run: () => feedProp(),
+      });
+      TIDES.forEach((mode) => {
+        entries.push({
+          group: "action",
+          title: `Switch to ${TIDE_LABEL[mode].toLowerCase()}`,
+          sub: mode === tide ? `${TIDE_NOTE[mode]} · now` : TIDE_NOTE[mode],
+          keywords: `tide light ${mode} ${mode === "night" ? "lantern dark moon" : mode === "day" ? "sun bright" : "sunset evening"}`,
+          icon: ACTION_ICON[mode],
+          accent: mode === "night" ? "#b8c8ff" : mode === "dusk" ? "#ff9a5a" : "#ffd66b",
+          verb: "Set",
+          run: () => setTide(mode),
+        });
+      });
+      if (wm.windows.size) {
+        entries.push({
+          group: "action",
+          title: "Close every window",
+          sub: "Clear the glass",
+          keywords: "tidy clear all",
+          icon: ACTION_ICON.close,
+          accent: "#e08978",
+          verb: "Close",
+          run: () => [...wm.windows.keys()].forEach((id) => wm.close(id)),
+        });
+      }
+      const seen = new Map();
+      (tank?.school() ?? []).forEach((fish) => {
+        const group = seen.get(fish.name);
+        if (group) group.slots.push(fish.slot);
+        else seen.set(fish.name, { ...fish, slots: [fish.slot] });
+      });
+      [...seen.values()].forEach((fish, index) => {
+        const meals = `${fish.meals} meal${fish.meals === 1 ? "" : "s"}`;
+        const many = fish.slots.length > 1 ? ` · school of ${fish.slots.length}` : "";
+        entries.push({
+          group: "fish",
+          title: fish.name,
+          sub: fish.next ? `${meals}${many} · ${fish.toNext} more to ${fish.next}` : `${meals}${many} · fully grown`,
+          keywords: `fish ping find ${fish.line}`,
+          look: fish.look,
+          featured: index < 3,
+          verb: "Ping",
+          run: () => tank?.ping(fish.slots),
+        });
+      });
+      return entries;
+    }
+
+    const sonar = startSonar({ toggle: sonarToggle, sources: sonarSources });
+
+    desktop.addEventListener("pointerdown", (event) => {
+      if (event.target !== desktop) return;
+      tank?.dropFood(event.clientX, event.clientY);
+      diveLog.complete("feed");
+      if (tide === "night") diveLog.complete("lantern");
+    });
+
+    tideToggle?.addEventListener("click", () => {
+      setTide(TIDES[(TIDES.indexOf(tide) + 1) % TIDES.length]);
     });
 
     window.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") wm.closeFocused();
+      if (event.key === "Escape" && !sonar.isOpen()) wm.closeFocused();
+    });
+
+    desktop.addEventListener("pointermove", () => {
+      if (tide === "night") diveLog.complete("lantern");
     });
 
     document.querySelector(".logo")?.addEventListener("click", () => {
       wm.open(fitWindow(wm, apps.about));
     });
 
-    showHint();
   } finally {
     document.body.classList.add("is-ready");
   }

@@ -1,4 +1,4 @@
-import { DART_LINE, Fish, LINES, loadSchool, rand, saveSchool } from "./fish.js";
+import { DART_LINE, Fish, LINES, loadSchool, mealsToNext, rand, saveSchool } from "./fish.js";
 import { sandBack, sandFront } from "./seabed.js";
 
 const TAU = Math.PI * 2;
@@ -6,6 +6,10 @@ const TIDE_LEVEL = { day: 0, dusk: 1, night: 2 };
 const DIVE_MS = 2800;
 const FISH_FLOOR = 112;
 const WAVE_PUSH = 2.5;
+const PING_MS = 3400;
+// After the dive, the school gathers under the title for a moment.
+const RALLY_FROM = 700;
+const RALLY_MS = 4200;
 
 const HAZE = {
   day: [16, 84, 104],
@@ -320,8 +324,11 @@ class Jelly {
   }
 }
 
-export function startAquarium(canvas, { water = null } = {}) {
+export function startAquarium(canvas, { water = null, veil = null, overlay = null } = {}) {
   const ctx = canvas.getContext("2d");
+  // Pings draw above the windows so a fish behind the glass can still be found.
+  const fx = overlay ? overlay.getContext("2d") : ctx;
+  let fxDirty = false;
   const mouse = { x: 0, y: 0, on: false, wake: 0 };
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const art = makeSprites();
@@ -331,6 +338,7 @@ export function startAquarium(canvas, { water = null } = {}) {
   const motes = [];
   const foods = [];
   const ripples = [];
+  const pings = [];
   let frontKelp = [];
   let backKelp = [];
   let tufts = [];
@@ -346,6 +354,7 @@ export function startAquarium(canvas, { water = null } = {}) {
   let diveStart = 0;
   let onEvolve = () => {};
   let onFeed = () => {};
+  let onPing = () => {};
 
   const groundFront = (x) => height - sandFront(x) + 4;
   const groundBack = (x) => height - sandBack(x) + 4;
@@ -359,6 +368,13 @@ export function startAquarium(canvas, { water = null } = {}) {
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (overlay) {
+      overlay.width = canvas.width;
+      overlay.height = canvas.height;
+      overlay.style.width = `${width}px`;
+      overlay.style.height = `${height}px`;
+      fx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
   }
 
   function plant() {
@@ -409,16 +425,23 @@ export function startAquarium(canvas, { water = null } = {}) {
     fish.length = 0;
     jellies.length = 0;
     bubbles.length = 0;
+    // The school is saved in depth order, so match progress by line id, not slot.
     const saved = loadSchool();
-    LINES.forEach((line, index) => {
-      const meals = saved[index]?.id === line.id ? saved[index].meals : 0;
-      fish.push(new Fish(width, height, line, reduceMotion, meals));
+    const mealsFor = (id) => {
+      const at = saved.findIndex((entry) => entry?.id === id);
+      if (at < 0) return 0;
+      const [entry] = saved.splice(at, 1);
+      return Number(entry.meals) || 0;
+    };
+    LINES.forEach((line) => {
+      fish.push(new Fish(width, height, line, reduceMotion, mealsFor(line.id)));
     });
     for (let i = 0; i < 5; i += 1) {
-      const slot = LINES.length + i;
-      const meals = saved[slot]?.id === DART_LINE.id ? saved[slot].meals : 0;
-      fish.push(new Fish(width, height, DART_LINE, reduceMotion, meals));
+      fish.push(new Fish(width, height, DART_LINE, reduceMotion, mealsFor(DART_LINE.id)));
     }
+    fish.forEach((item, slot) => {
+      item.slot = slot;
+    });
     for (let i = 0; i < 3; i += 1) jellies.push(new Jelly(width, height, reduceMotion));
     const ambient = reduceMotion ? 6 : 16;
     for (let i = 0; i < ambient; i += 1) {
@@ -478,6 +501,70 @@ export function startAquarium(canvas, { water = null } = {}) {
     }
   }
 
+  function pill(x, y, title, sub, alpha) {
+    fx.font = "600 13px Outfit, system-ui, sans-serif";
+    const titleW = fx.measureText(title).width;
+    fx.font = "500 11px Outfit, system-ui, sans-serif";
+    const subW = fx.measureText(sub).width;
+    const w = Math.max(titleW, subW) + 26;
+    const h = 42;
+    const left = clamp(x - w / 2, 8, width - w - 8);
+    const top = clamp(y - h, 62, height - h - 8);
+    fx.globalAlpha = alpha;
+    fx.beginPath();
+    fx.roundRect(left, top, w, h, 14);
+    fx.fillStyle = "rgba(6, 28, 38, 0.78)";
+    fx.fill();
+    fx.strokeStyle = "rgba(126, 224, 214, 0.55)";
+    fx.lineWidth = 1;
+    fx.stroke();
+    fx.textAlign = "center";
+    fx.textBaseline = "alphabetic";
+    fx.fillStyle = "#e8f7f4";
+    fx.font = "600 13px Outfit, system-ui, sans-serif";
+    fx.fillText(title, left + w / 2, top + 18);
+    fx.fillStyle = "rgba(197, 232, 225, 0.82)";
+    fx.font = "500 11px Outfit, system-ui, sans-serif";
+    fx.fillText(sub, left + w / 2, top + 33);
+    fx.textAlign = "start";
+    fx.globalAlpha = 1;
+  }
+
+  function drawPings(time) {
+    for (let i = pings.length - 1; i >= 0; i -= 1) {
+      const ping = pings[i];
+      const age = (time - ping.t) / PING_MS;
+      if (age >= 1) {
+        pings.splice(i, 1);
+        continue;
+      }
+      const { fish: item } = ping;
+      for (let k = 0; k < 3; k += 1) {
+        const wave = age * 1.8 - k * 0.24;
+        if (wave < 0 || wave > 1) continue;
+        fx.beginPath();
+        fx.arc(item.x, item.y, item.drawn * 0.9 + wave * 120, 0, TAU);
+        fx.strokeStyle = `rgba(126, 224, 214, ${0.7 * (1 - wave)})`;
+        fx.lineWidth = 1.8 - wave;
+        fx.stroke();
+      }
+      fx.beginPath();
+      fx.arc(item.x, item.y, item.drawn * 1.15, 0, TAU);
+      fx.strokeStyle = `rgba(232, 247, 244, ${0.5 * (1 - age)})`;
+      fx.setLineDash([3, 5]);
+      fx.lineWidth = 1.2;
+      fx.stroke();
+      fx.setLineDash([]);
+      if (!ping.tag) continue;
+      const left = mealsToNext(item.meals);
+      const next = item.line.stages[item.stage + 1]?.name;
+      const meals = `${item.meals} meal${item.meals === 1 ? "" : "s"}`;
+      const sub = next ? `${meals} · ${left} more to ${next}` : `${meals} · final form`;
+      const fade = Math.min(1, age * 8, (1 - age) * 5);
+      pill(item.x, item.y - item.drawn * 1.3 - 6, item.name, sub, fade);
+    }
+  }
+
   function frame(time) {
     const targetTide = TIDE_LEVEL[tide] ?? 0;
     tideBlend += (targetTide - tideBlend) * (reduceMotion ? 1 : 0.04);
@@ -487,6 +574,10 @@ export function startAquarium(canvas, { water = null } = {}) {
     const current = Math.sin(time * 0.00016) * 0.9;
     const motion = reduceMotion ? 0.2 : 1;
     const surface = surfaceLine(time);
+    const lure = mouse.on ? clamp((night - 0.5) / 0.4, 0, 1) : 0;
+    const since = time - diveStart - RALLY_FROM;
+    const rally = !reduceMotion && since > 0 && since < RALLY_MS ? Math.sin((since / RALLY_MS) * Math.PI) : 0;
+    const rallyPoint = { x: width / 2, y: height * 0.48, on: true };
     let schoolDirty = false;
 
     water?.render((time / 1000) * (reduceMotion ? 0.25 : 1), tideBlend, surface);
@@ -558,7 +649,11 @@ export function startAquarium(canvas, { water = null } = {}) {
     const haze = { rgb: hazeRgb.join(", "), amount: 0.42, floor: 0 };
     wakeTick = (wakeTick + 1) % 4;
     fish.forEach((item, index) => {
-      item.update(width, height, mouse, time, current, foods, FISH_FLOOR);
+      if (rally > 0.05 && lure < 0.05) {
+        item.update(width, height, rallyPoint, time, current, foods, FISH_FLOOR, rally);
+      } else {
+        item.update(width, height, mouse, time, current, foods, FISH_FLOOR, lure);
+      }
       if (water && !reduceMotion) {
         const flow = water.flow(item.x, item.y);
         if (flow) {
@@ -680,6 +775,13 @@ export function startAquarium(canvas, { water = null } = {}) {
     }
 
     ctx.globalCompositeOperation = "lighter";
+    if (lure > 0.01) {
+      const g = 150 + Math.sin(time * 0.004) * 8;
+      ctx.globalAlpha = 0.8 * lure;
+      ctx.drawImage(art.amber, mouse.x - g, mouse.y - g, g * 2, g * 2);
+      ctx.globalAlpha = lure;
+      ctx.drawImage(art.amber, mouse.x - 22, mouse.y - 22, 44, 44);
+    }
     const glowAmt = night + dusk * 0.35;
     if (glowAmt > 0.01) {
       motes.forEach((mote, i) => {
@@ -710,6 +812,9 @@ export function startAquarium(canvas, { water = null } = {}) {
     ctx.globalCompositeOperation = "source-over";
 
     fish.forEach((item) => drawFx(item, time));
+    if (fx !== ctx && (pings.length || fxDirty)) fx.clearRect(0, 0, width, height);
+    fxDirty = pings.length > 0;
+    drawPings(time);
 
     raf = window.requestAnimationFrame(frame);
   }
@@ -721,6 +826,11 @@ export function startAquarium(canvas, { water = null } = {}) {
     mouse.x = event.clientX;
     mouse.y = event.clientY;
     mouse.on = true;
+    if (veil) {
+      veil.style.setProperty("--lx", `${mouse.x}px`);
+      veil.style.setProperty("--ly", `${mouse.y}px`);
+      veil.classList.add("is-lit");
+    }
     if (reduceMotion) return;
     if (water) {
       mouse.wake += (Math.min(moved / 18, 1.4) * 1.5 - mouse.wake) * 0.35;
@@ -736,6 +846,7 @@ export function startAquarium(canvas, { water = null } = {}) {
 
   function onLeave() {
     mouse.on = false;
+    veil?.classList.remove("is-lit");
   }
 
   function sprinkle(x, y) {
@@ -789,6 +900,33 @@ export function startAquarium(canvas, { water = null } = {}) {
         addBubble(x + rand(-18, 18), y + rand(-8, 8), rand(1.4, 4.6), rand(0.8, 2.2));
       }
     },
+    school() {
+      return fish
+        .map((item) => ({
+          slot: item.slot,
+          line: item.line.id,
+          name: item.name,
+          stage: item.stage,
+          meals: item.meals,
+          look: item.look(),
+          next: item.line.stages[item.stage + 1]?.name ?? null,
+          toNext: mealsToNext(item.meals),
+        }))
+        .sort((a, b) => a.slot - b.slot);
+    },
+    ping(slots, source = "user") {
+      const wanted = new Set(slots);
+      const now = performance.now();
+      const found = fish.filter((item) => wanted.has(item.slot));
+      found.forEach((item, i) => {
+        const existing = pings.findIndex((p) => p.fish === item);
+        if (existing >= 0) pings.splice(existing, 1);
+        pings.push({ fish: item, t: now + i * 120, tag: i === 0 });
+        water?.drop(item.x, item.y, reduceMotion ? 1 : 3);
+      });
+      if (found.length) onPing(source);
+      return found.length;
+    },
     setTide(next) {
       if (reduceMotion || !tideSet) tideBlend = TIDE_LEVEL[next] ?? 0;
       tide = next;
@@ -796,6 +934,9 @@ export function startAquarium(canvas, { water = null } = {}) {
     },
     onFeed(handler) {
       onFeed = handler;
+    },
+    onPing(handler) {
+      onPing = handler;
     },
     onEvolve(handler) {
       onEvolve = handler;

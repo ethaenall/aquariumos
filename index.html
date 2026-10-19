@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#072f3f" />
     <meta
       name="description"
-      content="AquariumOS — a tiny operating system living beneath the surface. Glass windows float in an aquarium; fish peel away from the cursor."
+      content="AquariumOS — a tiny operating system living beneath the surface. Glass windows float in an aquarium; fish grow as you feed them and gather at your lantern by night."
     />
     <meta property="og:title" content="AquariumOS" />
     <meta
@@ -72,6 +72,7 @@
       </div>
       <canvas id="tank" class="tank"></canvas>
       <div class="vignette"></div>
+      <div class="night-veil"></div>
     </div>
 
     <div class="dive-title" aria-hidden="true">
@@ -96,6 +97,7 @@
         <span class="logo-type">AquariumOS</span>
       </button>
       <div class="status-cluster">
+        <button type="button" id="sonar-toggle" class="sonar-toggle" aria-label="Open Sonar search"><span class="sonar-glyph" aria-hidden="true"></span><span class="sonar-word">Sonar</span><kbd class="sonar-key">⌘K</kbd></button>
         <button type="button" id="tide-toggle" class="tide-toggle" aria-label="Cycle day, dusk, and night lighting"><span class="tide-glyph" aria-hidden="true"></span><span class="tide-label">Day</span></button>
         <span id="tank-readout" class="tank-readout" aria-label="Tank conditions">12.4 m · 24°C</span>
         <time id="clock" class="clock" datetime=""></time>
@@ -104,6 +106,7 @@
 
     <main id="desktop" class="desktop"></main>
     <div id="snap-ghost" class="snap-ghost" hidden></div>
+    <canvas id="sonar-layer" class="sonar-layer" aria-hidden="true"></canvas>
 
     <nav class="sand-props" aria-label="Apps planted in the sand">
       <button
@@ -232,11 +235,45 @@
 
       <button
         type="button"
+        class="sand-prop sand-prop-guide"
+        data-app="guide"
+        data-label="Field Guide"
+        aria-label="Open Field Guide"
+        style="--i: 4; --bury: 6px; --sway: 9.4s; --accent: #a8c4ff"
+      >
+        <span class="sand-prop-halo" aria-hidden="true"></span>
+        <span class="sand-prop-label">Guide</span>
+        <span class="sand-prop-art" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <ellipse class="prop-silt" cx="32" cy="58" rx="20" ry="4.6" />
+            <g transform="rotate(-24 32 46)">
+              <rect x="11" y="37" width="32" height="17" rx="8" fill="#4f9f92" opacity="0.62" />
+              <path d="M42 41 H50 V50 H42 Z" fill="#4f9f92" opacity="0.66" />
+              <rect x="49.5" y="40" width="5" height="11" rx="1.6" fill="#a0744a" />
+              <path d="M51 42 V49" stroke="#7a5432" stroke-width="0.9" />
+              <rect class="guide-scroll" x="16" y="40.6" width="22" height="9.8" rx="4.9" fill="#efe0b8" />
+              <ellipse cx="16.6" cy="45.5" rx="2" ry="4.9" fill="#d8c494" />
+              <path d="M20 43.6 H33 M20 46.4 H30 M20 49 H27" stroke="#9a7c52" stroke-width="0.9" stroke-linecap="round" />
+              <path d="M15 40 Q 27 36.6, 41 39.4" stroke="#e8fbf7" stroke-width="1.6" fill="none" opacity="0.75" stroke-linecap="round" />
+              <path d="M14 50.5 Q 20 53, 30 52.6" stroke="#bff2ea" stroke-width="1" fill="none" opacity="0.4" stroke-linecap="round" />
+            </g>
+            <path d="M6 59 C 14 52, 22 54, 30 56 C 38 58, 48 53, 58 57 L 58 61 L 6 61 Z" fill="#7d654b" />
+            <circle cx="47" cy="22" r="1.6" fill="none" stroke="#d7f3fb" stroke-width="0.8" opacity="0.6" />
+            <circle cx="51" cy="15" r="1.1" fill="none" stroke="#d7f3fb" stroke-width="0.7" opacity="0.45" />
+          </svg>
+        </span>
+        <span class="sand-prop-mound" aria-hidden="true"></span>
+        <span class="sand-prop-pearl" aria-hidden="true"></span>
+        <span class="sand-prop-sleep" aria-hidden="true"></span>
+      </button>
+
+      <button
+        type="button"
         class="sand-prop sand-prop-about"
         data-app="about"
         data-label="About"
         aria-label="Open About AquariumOS"
-        style="--i: 4; --bury: 5px; --sway: 8.8s; --accent: #7ee0d6"
+        style="--i: 5; --bury: 5px; --sway: 8.8s; --accent: #7ee0d6"
       >
         <span class="sand-prop-halo" aria-hidden="true"></span>
         <span class="sand-prop-label">About</span>
