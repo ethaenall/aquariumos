@@ -27,4 +27,4 @@ Do not add an email, phone, school, home path, or legal name to any tracked file
 
 ## Live site vs this branch
 
-GitHub Pages serves **WebOS 1** from `main`. Do not document feeding, tides, or window snap as live unless those files are actually on `main`.
+GitHub Pages serves `main`, including feeding, fish growth, tides, sand app props, and window snap. Keep the README aligned with the deployed version; branch-only work is not live until Pages deploys it.

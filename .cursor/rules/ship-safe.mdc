@@ -12,4 +12,4 @@ Before editing README, About copy, screenshots, or committing:
 3. Credit the author as GitHub user `ethaenall` only
 4. Live demo is https://ethaenall.github.io/aquariumos/ — never use the repo as the demo
 5. Cover is `assets/screenshot.png`. Share crop is `assets/cover.png`
-6. README must describe the live WebOS 1 demo, not unreleased WebOS 2 work
+6. README must describe the version deployed from main, not unreleased branch-only work

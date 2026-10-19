@@ -216,11 +216,14 @@ function createMusic() {
   wrap.className = "app-music";
 
   wrap.innerHTML = `
-    <div>
-      <h2 class="music-title">Tide Lights</h2>
-      <p class="music-sub">Original ambient loop · replaceable local track</p>
+    <div class="music-head">
+      <div class="music-disc" aria-hidden="true"><span></span></div>
+      <div>
+        <h2 class="music-title">Tide Lights</h2>
+        <p class="music-sub">Original ambient loop · replaceable local track</p>
+      </div>
     </div>
-    <div class="eq" aria-hidden="true">${"<span></span>".repeat(8)}</div>
+    <div class="music-eq" aria-hidden="true">${"<span></span>".repeat(14)}</div>
     <div class="music-row">
       <button class="play-btn" type="button" aria-label="Play">${iconPlay()}</button>
       <input class="music-progress" type="range" min="0" max="0" value="0" step="0.01" aria-label="Track progress" />
@@ -315,49 +318,69 @@ function createAbout() {
     <h2 class="about-title">AquariumOS</h2>
     <p class="about-lead">A tiny operating system living beneath the surface.</p>
     <p class="about-copy">
-      This desktop is an aquarium first and a computer second. Fish drift behind glass windows,
-      peel away from the cursor, and the dock sits like a smooth stone on the sand.
+      This desktop is an aquarium first and a computer second. Fish drift behind glass windows
+      and peel away from the cursor. Apps live in the sand; feeding grows fish into new forms.
     </p>
-    <p class="about-copy">Hack Club Stardance · WebOS 1.</p>
+    <p class="about-copy">
+      Click empty water to sprinkle food, or tap the anemone bowl. Cycle Day / Dusk / Night
+      from the top bar. Minimize a window and its prop goes to sleep; click it to wake it.
+      The tank starts empty so the fish can show off.
+    </p>
+    <p class="about-copy">Hack Club Stardance · WebOS 1 and the start of WebOS 2.</p>
   `;
   return wrap;
 }
+
+const ICONS = {
+  notes: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2.5h6l2.5 2.5v8.5H4z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M6 7h4.5M6 9.5h4.5M6 12h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>`,
+  calculator: `<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="10" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="5" y="4" width="6" height="2.4" rx="0.6" fill="currentColor"/><circle cx="6" cy="9" r="0.9" fill="currentColor"/><circle cx="10" cy="9" r="0.9" fill="currentColor"/><circle cx="6" cy="11.6" r="0.9" fill="currentColor"/><circle cx="10" cy="11.6" r="0.9" fill="currentColor"/></svg>`,
+  music: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 12V3.5l7-1.5V10.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="4.4" cy="12" r="1.8" fill="currentColor"/><circle cx="11.4" cy="10.5" r="1.8" fill="currentColor"/></svg>`,
+  about: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 9.5Q8 1 14 9.5Q8 7 2 9.5z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 9.5Q8 15.5 14 9.5" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="9" r="1.9" fill="currentColor"/></svg>`,
+};
 
 export const apps = {
   notes: {
     id: "notes",
     title: "Notes",
-    width: 400,
-    height: 380,
-    left: 0.03,
+    accent: "#86e3a8",
+    icon: ICONS.notes,
+    width: 460,
+    height: 440,
+    left: 0.025,
     top: 0.03,
     create: createNotes,
   },
   calculator: {
     id: "calculator",
     title: "Calculator",
-    width: 300,
-    height: 420,
-    left: 0.75,
+    accent: "#f2cf6a",
+    icon: ICONS.calculator,
+    width: 330,
+    height: 480,
+    left: 0.74,
     top: 0.03,
     create: createCalculator,
   },
   music: {
     id: "music",
     title: "Music",
-    width: 360,
-    height: 300,
-    left: 0.03,
-    top: 0.54,
+    accent: "#f4a6c8",
+    icon: ICONS.music,
+    width: 400,
+    height: 360,
+    left: 0.355,
+    top: 0.05,
     create: createMusic,
   },
   about: {
     id: "about",
     title: "About AquariumOS",
-    width: 400,
-    height: 340,
-    left: 0.42,
-    top: 0.5,
+    accent: "#7ee0d6",
+    icon: ICONS.about,
+    width: 460,
+    height: 400,
+    left: 0.37,
+    top: 0.42,
     create: createAbout,
   },
 };

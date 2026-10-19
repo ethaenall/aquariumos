@@ -2,7 +2,7 @@
 
 Post these on your Stardance **project page**, not in the About app. Each one needs its screenshot.
 
-This checkpoint is **WebOS 1** (fixed payout). Post logs 1–3, then ship. Do not post logs 4–6 until WebOS 1 has shipped.
+WebOS 1 is a fixed payout. Ratings happen on the **WebOS 2** ship, so post 1–3 first, ship WebOS 1, then post 4–6 and ship again.
 
 Keep them short. First sentence = what changed.
 
@@ -32,27 +32,27 @@ I wanted the cursor to feel like something in the water, not a pointer on top of
 
 ---
 
-## After WebOS 1 ships — WebOS 2 (do not post yet)
+## After WebOS 1 ships — WebOS 2 (this is the rated one)
 
-These live on the `webos-2` branch. Voters score originality, technicality, usability, and storytelling on the WebOS 2 ship.
+Voters score originality, technicality, usability, and storytelling. These three features are the ones that make AquariumOS look like a tank instead of another browser desktop.
 
 ### Devlog 4 — feeding
 
 **Attach:** `assets/devlogs/04-feed.png`
 
-Click empty water (or the Feed flake on the dock) and food sinks. Fish break off from wandering and actually hunt it. If you hold the cursor over them they still flinch, unless they're already going for a flake. The first version let the mouse scare them off the food every time.
+Click empty water (or the anemone bowl in the sand) and food sinks. Fish break off from wandering and actually hunt it. If you hold the cursor over them they still flinch, unless they're already going for a flake. The first version let the mouse scare them off the food every time.
 
 ### Devlog 5 — day / dusk / night
 
 **Attach:** `assets/devlogs/05-night.png`
 
-The tank follows the clock: daylight, a warmer dusk, then a darker night with a weaker surface. There's a Day button in the top bar so voters can cycle it without waiting. Night was too black at first and the dock disappeared, so I kept the glass readable.
+The tank follows the clock: daylight, a warmer dusk, then a darker night with a weaker surface. There's a Day button in the top bar so voters can cycle it without waiting. Night was too black at first and the sand props disappeared, so I kept them readable.
 
 ### Devlog 6 — windows that dock
 
 **Attach:** `assets/devlogs/06-snap.png`
 
-Windows can minimize to the dock, fill the tank, or snap to a side if you drag them to the edge. The snap ghost is a sheet of water, not a Windows rectangle. Minimize was the usability hole — people kept losing windows behind the kelp.
+Windows can minimize into their sand prop, fill the tank, or snap to a side if you drag them to the edge. The snap ghost is a sheet of water, not a Windows rectangle. Minimize was the usability hole — people kept losing windows behind the kelp.
 
 ---
 
@@ -60,4 +60,4 @@ Windows can minimize to the dock, fill the tank, or snap to a side if you drag t
 
 1. Create the AquariumOS project on [stardance.hackclub.com](https://stardance.hackclub.com).
 2. Post logs 1–3, attach the screenshots, ship **WebOS 1**.
-3. After that ship is in, check out `webos-2`, post logs 4–6, and ship **WebOS 2**.
+3. Post logs 4–6 (screenshot feeding, night, and a snapped window), ship **WebOS 2**.

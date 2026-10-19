@@ -41,22 +41,10 @@
   </head>
   <body>
     <div class="aquarium" aria-hidden="true">
-      <canvas id="tank" class="tank"></canvas>
+      <canvas id="water" class="water"></canvas>
       <div class="water-surface"></div>
       <div class="light-rays"></div>
       <div class="caustics"></div>
-      <div class="vignette"></div>
-
-      <svg class="kelp kelp-left" viewBox="0 0 180 520" preserveAspectRatio="xMidYMax meet">
-        <path class="frond f1" d="M78 520 C 70 430, 118 380, 86 300 C 52 220, 120 170, 74 90 C 50 40, 88 16, 82 0" />
-        <path class="frond f2" d="M48 520 C 28 400, 86 350, 40 250 C 8 170, 78 130, 36 40" />
-        <path class="frond f3" d="M118 520 C 132 410, 78 360, 128 250 C 168 160, 96 110, 140 20" />
-      </svg>
-
-      <svg class="kelp kelp-right" viewBox="0 0 180 480" preserveAspectRatio="xMidYMax meet">
-        <path class="frond f4" d="M96 480 C 120 380, 62 330, 110 230 C 154 140, 78 90, 122 10" />
-        <path class="frond f5" d="M54 480 C 36 370, 96 320, 48 210 C 10 120, 80 80, 42 8" />
-      </svg>
 
       <div class="seabed">
         <svg class="rocks" viewBox="0 0 900 140" preserveAspectRatio="none">
@@ -66,18 +54,29 @@
           <ellipse cx="430" cy="124" rx="38" ry="14" fill="#2f433c" />
           <ellipse cx="690" cy="122" rx="52" ry="16" fill="#354940" />
         </svg>
-        <svg class="coral" viewBox="0 0 900 140" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+        <svg class="coral coral-left" viewBox="80 70 80 70" aria-hidden="true">
           <path d="M118 132 C 112 108, 96 96, 108 78 C 122 92, 128 108, 124 132 Z" fill="#c97b6a" />
           <path d="M132 132 C 140 110, 158 98, 148 76 C 134 90, 128 112, 132 132 Z" fill="#d48978" />
           <path d="M108 132 C 98 114, 86 104, 92 82 C 108 96, 114 116, 112 132 Z" fill="#b86b5c" />
+        </svg>
+        <svg class="coral coral-right" viewBox="640 70 175 70" aria-hidden="true">
           <path d="M760 134 C 748 112, 732 104, 742 80 C 760 94, 768 114, 762 134 Z" fill="#c97b6a" />
           <path d="M776 134 C 786 116, 804 102, 792 78 C 776 94, 770 116, 776 134 Z" fill="#e0a090" />
-          <g class="star">
-            <path d="M510 118 L516 108 L522 118 L533 120 L524 128 L526 140 L516 134 L506 140 L508 128 L499 120 Z" fill="#d9a15c" />
+          <g transform="translate(150 -4)">
+            <g class="star">
+              <path d="M510 118 L516 108 L522 118 L533 120 L524 128 L526 140 L516 134 L506 140 L508 128 L499 120 Z" fill="#d9a15c" />
+            </g>
           </g>
         </svg>
         <div class="sand"></div>
       </div>
+      <canvas id="tank" class="tank"></canvas>
+      <div class="vignette"></div>
+    </div>
+
+    <div class="dive-title" aria-hidden="true">
+      <span class="dive-name">AquariumOS</span>
+      <span class="dive-line">A tiny operating system living beneath the surface</span>
     </div>
 
     <header class="menubar">
@@ -97,62 +96,166 @@
         <span class="logo-type">AquariumOS</span>
       </button>
       <div class="status-cluster">
+        <button type="button" id="tide-toggle" class="tide-toggle" aria-label="Cycle day, dusk, and night lighting"><span class="tide-glyph" aria-hidden="true"></span><span class="tide-label">Day</span></button>
         <span id="tank-readout" class="tank-readout" aria-label="Tank conditions">12.4 m · 24°C</span>
         <time id="clock" class="clock" datetime=""></time>
       </div>
     </header>
 
     <main id="desktop" class="desktop"></main>
+    <div id="snap-ghost" class="snap-ghost" hidden></div>
 
-    <nav class="dock" aria-label="AquariumOS applications">
-      <div class="dock-glass">
-        <button class="dock-item" data-app="notes" aria-label="Open Notes">
-          <span class="dock-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48">
-              <path d="M10 28c2-10 8-18 14-22 6 4 12 12 14 22-4 8-8 12-14 14-6-2-10-6-14-14z" fill="#f2d2b6" />
-              <path d="M16 27c2 1 6 2 8 8 2-6 6-7 8-8-2-7-5-11-8-14-3 3-6 7-8 14z" fill="#e8b992" />
-              <path d="M24 8c1.4 3 2 7 1.2 11" stroke="#c48963" stroke-width="1.4" fill="none" />
-            </svg>
-          </span>
-          <span class="dock-label">Notes</span>
-        </button>
-        <button class="dock-item" data-app="calculator" aria-label="Open Calculator">
-          <span class="dock-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48">
-              <rect x="11" y="8" width="26" height="32" rx="8" fill="#7d8f86" />
-              <rect x="15" y="12" width="18" height="8" rx="3" fill="#cfe7df" />
-              <circle cx="18" cy="27" r="2.1" fill="#e8f7f2" />
-              <circle cx="24" cy="27" r="2.1" fill="#e8f7f2" />
-              <circle cx="30" cy="27" r="2.1" fill="#e8f7f2" />
-              <circle cx="18" cy="33.5" r="2.1" fill="#e8f7f2" />
-              <circle cx="24" cy="33.5" r="2.1" fill="#9ce0d2" />
-              <circle cx="30" cy="33.5" r="2.1" fill="#e8f7f2" />
-            </svg>
-          </span>
-          <span class="dock-label">Calculator</span>
-        </button>
-        <button class="dock-item" data-app="music" aria-label="Open Music">
-          <span class="dock-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48">
-              <path d="M24 8c7 0 12 5 12 11 0 8-6 12-12 20C18 31 12 27 12 19 12 13 17 8 24 8z" fill="#9fd6e8" />
-              <path d="M24 12c4.6 0 8 3.2 8 7.4 0 5.5-4 8.4-8 14.1-4-5.7-8-8.6-8-14.1C16 15.2 19.4 12 24 12z" fill="#d7f3fb" opacity="0.7" />
-              <path d="M18 30 c2 6 4 9 6 12 c2-3 4-6 6-12" stroke="#7fb7c8" stroke-width="1.4" fill="none" opacity="0.8" />
-            </svg>
-          </span>
-          <span class="dock-label">Music</span>
-        </button>
-        <button class="dock-item" data-app="about" aria-label="Open About AquariumOS">
-          <span class="dock-icon" aria-hidden="true">
-            <svg viewBox="0 0 48 48">
-              <path d="M10 30c2-12 8-20 14-22 6 2 12 10 14 22-4 6-9 10-14 11-5-1-10-5-14-11z" fill="#c9d6d2" />
-              <circle cx="24" cy="27" r="7.5" fill="#f3f7f4" />
-              <circle cx="24" cy="27" r="4.6" fill="#b7ece3" />
-              <circle cx="26.2" cy="25" r="1.4" fill="#ffffff" />
-            </svg>
-          </span>
-          <span class="dock-label">About</span>
-        </button>
-      </div>
+    <nav class="sand-props" aria-label="Apps planted in the sand">
+      <button
+        type="button"
+        class="sand-prop sand-prop-feed"
+        data-action="feed"
+        data-label="Feed"
+        aria-label="Sprinkle fish food from the bowl"
+        style="--i: 0; --bury: 5px; --sway: 9s; --accent: #f0b860"
+      >
+        <span class="sand-prop-halo" aria-hidden="true"></span>
+        <span class="sand-prop-label">Feed</span>
+        <span class="sand-prop-art" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <ellipse class="prop-silt" cx="32" cy="58" rx="20" ry="5" />
+            <ellipse cx="32" cy="52" rx="21" ry="7.5" fill="#6d5b48" />
+            <ellipse cx="32" cy="50" rx="17" ry="5.2" fill="#3c332c" />
+            <ellipse cx="32" cy="49" rx="14" ry="3.6" fill="#2a241f" />
+            <ellipse cx="26" cy="49.5" rx="2.4" ry="1.2" fill="#e8b05c" transform="rotate(-24 26 49.5)" />
+            <ellipse cx="38" cy="50" rx="2" ry="1.1" fill="#f0c878" transform="rotate(16 38 50)" />
+            <ellipse cx="32" cy="51" rx="1.7" ry="0.9" fill="#d4924a" />
+            <ellipse cx="32" cy="44" rx="7.2" ry="5.6" fill="#c97b6a" />
+            <g class="anemone-arms">
+              <path d="M28 42 C 22 32, 24 22, 20 16" stroke="#e0a090" stroke-width="2.5" fill="none" stroke-linecap="round" />
+              <path d="M32 40 C 30 28, 34 20, 31 12" stroke="#f0b8a8" stroke-width="2.7" fill="none" stroke-linecap="round" />
+              <path d="M36 42 C 42 31, 40 22, 44 15" stroke="#d48978" stroke-width="2.5" fill="none" stroke-linecap="round" />
+              <path d="M29 43 C 24 36, 18 34, 16 28" stroke="#c97b6a" stroke-width="2.2" fill="none" stroke-linecap="round" />
+              <path d="M35 43 C 40 36, 46 34, 48 27" stroke="#e8a898" stroke-width="2.2" fill="none" stroke-linecap="round" />
+            </g>
+            <ellipse cx="32" cy="42" rx="4.2" ry="3.2" fill="#b86b5c" />
+          </svg>
+        </span>
+        <span class="sand-prop-mound" aria-hidden="true"></span>
+        <span class="sand-prop-pearl" aria-hidden="true"></span>
+        <span class="sand-prop-sleep" aria-hidden="true"></span>
+      </button>
+
+      <button
+        type="button"
+        class="sand-prop sand-prop-notes"
+        data-app="notes"
+        data-label="Notes"
+        aria-label="Open Notes"
+        style="--i: 1; --bury: 3px; --sway: 8.2s; --accent: #86e3a8"
+      >
+        <span class="sand-prop-halo" aria-hidden="true"></span>
+        <span class="sand-prop-label">Notes</span>
+        <span class="sand-prop-art" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <ellipse class="prop-silt" cx="32" cy="59" rx="16" ry="4.2" />
+            <path d="M31 58 C 30 42, 32 30, 30 16" stroke="#6b4428" stroke-width="5.2" fill="none" stroke-linecap="round" />
+            <ellipse cx="22" cy="22" rx="10" ry="7.5" fill="#1f7050" />
+            <ellipse cx="38" cy="16" rx="12" ry="9" fill="#2a9b74" />
+            <ellipse cx="44" cy="24" rx="8" ry="6" fill="#176e54" />
+            <ellipse cx="18" cy="28" rx="6.5" ry="5" fill="#218866" />
+            <path d="M24 34 L35 24 L46 34 Z" fill="#8b5a3c" />
+            <rect x="26" y="33" width="18" height="13" rx="1.6" fill="#c4a06a" />
+            <rect class="cabin-window" x="32" y="36" width="6" height="5.5" rx="1" fill="#7ee0d6" />
+            <path d="M36 46 V52" stroke="#7a4a28" stroke-width="1.6" />
+            <path d="M36 48 L34 50 M36 50 L38 52" stroke="#9a6a40" stroke-width="1.1" />
+          </svg>
+        </span>
+        <span class="sand-prop-mound" aria-hidden="true"></span>
+        <span class="sand-prop-pearl" aria-hidden="true"></span>
+        <span class="sand-prop-sleep" aria-hidden="true"></span>
+      </button>
+
+      <button
+        type="button"
+        class="sand-prop sand-prop-calc"
+        data-app="calculator"
+        data-label="Calculator"
+        aria-label="Open Calculator"
+        style="--i: 2; --bury: 6px; --sway: 10s; --accent: #f2cf6a"
+      >
+        <span class="sand-prop-halo" aria-hidden="true"></span>
+        <span class="sand-prop-label">Calculator</span>
+        <span class="sand-prop-art" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <ellipse class="prop-silt" cx="32" cy="58" rx="20" ry="5" />
+            <rect x="11" y="32" width="42" height="22" rx="4" fill="#8a5a32" />
+            <rect x="11" y="32" width="42" height="8" rx="2" fill="#6f4524" />
+            <path d="M12 33 Q 32 16, 52 33 L52 36 Q 32 24, 12 36 Z" fill="#b8733a" />
+            <path d="M14 34 Q 32 22, 50 34" stroke="#d4a04a" stroke-width="2.4" fill="none" />
+            <rect x="11" y="36" width="42" height="3.4" fill="#c4923c" />
+            <circle cx="32" cy="46" r="4.2" fill="#e8c35a" />
+            <path d="M32 43.6 V48.4 M29.6 46 H34.4" stroke="#6b4018" stroke-width="1.5" stroke-linecap="round" />
+            <rect x="16" y="43" width="5" height="6" rx="1" fill="#cfe7df" opacity="0.85" />
+            <rect x="43" y="43" width="5" height="6" rx="1" fill="#cfe7df" opacity="0.85" />
+            <path d="M18.5 44.6 V47.6 M17.2 46.1 H19.8" stroke="#3aa89c" stroke-width="1.1" stroke-linecap="round" />
+            <path d="M45.5 44.6 V47.6" stroke="#3aa89c" stroke-width="1.1" stroke-linecap="round" />
+            <ellipse cx="20" cy="54" rx="3.2" ry="1.6" fill="#d4a04a" opacity="0.7" />
+            <ellipse cx="44" cy="54" rx="2.6" ry="1.3" fill="#e8c35a" opacity="0.7" />
+          </svg>
+        </span>
+        <span class="sand-prop-mound" aria-hidden="true"></span>
+        <span class="sand-prop-pearl" aria-hidden="true"></span>
+        <span class="sand-prop-sleep" aria-hidden="true"></span>
+      </button>
+
+      <button
+        type="button"
+        class="sand-prop sand-prop-music"
+        data-app="music"
+        data-label="Music"
+        aria-label="Open Music"
+        style="--i: 3; --bury: 4px; --sway: 7.6s; --accent: #f4a6c8"
+      >
+        <span class="sand-prop-halo" aria-hidden="true"></span>
+        <span class="sand-prop-label">Music</span>
+        <span class="sand-prop-art" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <ellipse class="prop-silt" cx="32" cy="58" rx="15" ry="4.4" />
+            <path d="M20 42 C 14 30, 22 16, 38 14 C 54 12, 56 30, 46 44 C 40 54, 24 54, 20 42 Z" fill="#e8c4b0" />
+            <path d="M24 40 C 20 30, 26 20, 38 18 C 50 17, 50 32, 42 42 C 36 50, 26 48, 24 40 Z" fill="#f4ddd0" />
+            <path d="M36 22 C 44 24, 46 34, 38 40 C 31 45, 27 36, 33 32" stroke="#c4897a" stroke-width="2" fill="none" stroke-linecap="round" />
+            <ellipse cx="22" cy="40" rx="6.2" ry="8" fill="#9fd6e8" />
+            <ellipse cx="22" cy="40" rx="3.4" ry="5" fill="#d7f3fb" opacity="0.75" />
+            <path d="M40 28 C 46 26, 50 30, 48 36" stroke="#d4a090" stroke-width="1.4" fill="none" opacity="0.8" />
+          </svg>
+        </span>
+        <span class="sand-prop-mound" aria-hidden="true"></span>
+        <span class="sand-prop-pearl" aria-hidden="true"></span>
+        <span class="sand-prop-sleep" aria-hidden="true"></span>
+      </button>
+
+      <button
+        type="button"
+        class="sand-prop sand-prop-about"
+        data-app="about"
+        data-label="About"
+        aria-label="Open About AquariumOS"
+        style="--i: 4; --bury: 5px; --sway: 8.8s; --accent: #7ee0d6"
+      >
+        <span class="sand-prop-halo" aria-hidden="true"></span>
+        <span class="sand-prop-label">About</span>
+        <span class="sand-prop-art" aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <ellipse class="prop-silt" cx="32" cy="58" rx="18" ry="4.6" />
+            <ellipse cx="32" cy="46" rx="22" ry="10" fill="#8a9690" />
+            <ellipse cx="32" cy="44" rx="18" ry="7.2" fill="#c5d0cc" />
+            <path class="oyster-lid" d="M12 40 Q 32 14, 52 40 Q 32 30, 12 40 Z" fill="#b7c4be" />
+            <path d="M16 39 Q 32 22, 48 39" stroke="#d7e0dc" stroke-width="1.2" fill="none" opacity="0.7" />
+            <circle class="oyster-pearl" cx="32" cy="38" r="5.2" fill="#e8f7f4" />
+            <circle class="oyster-pearl" cx="32" cy="38" r="3.3" fill="#7ee0d6" />
+            <circle cx="33.6" cy="36.4" r="1.1" fill="#ffffff" />
+          </svg>
+        </span>
+        <span class="sand-prop-mound" aria-hidden="true"></span>
+        <span class="sand-prop-pearl" aria-hidden="true"></span>
+        <span class="sand-prop-sleep" aria-hidden="true"></span>
+      </button>
     </nav>
 
     <script type="module" src="js/main.js"></script>
