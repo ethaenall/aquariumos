@@ -1,4 +1,5 @@
 import { startAquarium } from "./aquarium.js";
+import { startWater } from "./water.js";
 import { WindowManager } from "./windows.js";
 import { apps } from "./apps.js";
 
@@ -44,8 +45,12 @@ function startReadout(el) {
 
 function applyTide(mode, tank, toggle) {
   document.body.dataset.tide = mode;
+  document.documentElement.dataset.tide = mode;
   tank?.setTide(mode);
-  if (toggle) toggle.textContent = TIDE_LABEL[mode];
+  if (!toggle) return;
+  const label = toggle.querySelector(".tide-label");
+  if (label) label.textContent = TIDE_LABEL[mode];
+  else if (!toggle.querySelector("svg, img, .tide-glyph")) toggle.textContent = TIDE_LABEL[mode];
 }
 
 function fitWindow(wm, app) {
@@ -53,6 +58,21 @@ function fitWindow(wm, app) {
   const width = Math.min(app.width, Math.max(240, desktop.width - 24));
   const height = Math.min(app.height, Math.max(180, desktop.height - 16));
   return { ...app, width, height };
+}
+
+function showToast(text) {
+  let toast = document.querySelector(".tank-toast");
+  if (!toast) {
+    toast = document.createElement("p");
+    toast.className = "tank-toast";
+    document.body.append(toast);
+  }
+  toast.textContent = text;
+  toast.classList.remove("is-gone");
+  window.clearTimeout(toast._hide);
+  toast._hide = window.setTimeout(() => {
+    toast.classList.add("is-gone");
+  }, 2600);
 }
 
 function showHint() {
@@ -65,7 +85,7 @@ function showHint() {
   const hint = document.createElement("button");
   hint.type = "button";
   hint.className = "tank-hint";
-  hint.textContent = "Click empty water to feed. Fish notice the cursor too.";
+  hint.textContent = "Apps live in the sand. Click empty water to feed — they grow and change.";
   document.body.append(hint);
 
   const dismiss = () => {
@@ -89,8 +109,17 @@ function boot() {
     const clock = document.querySelector("#clock");
     const readout = document.querySelector("#tank-readout");
     const tideToggle = document.querySelector("#tide-toggle");
-    const dockButtons = document.querySelectorAll(".dock-item");
-    const tank = canvas ? startAquarium(canvas) : null;
+    const propButtons = document.querySelectorAll(".sand-prop, .dock-item");
+    let water = null;
+    try {
+      water = startWater(document.querySelector("#water"));
+    } catch {
+      water = null;
+    }
+    document.body.classList.toggle("gl-water", Boolean(water));
+    const tank = canvas ? startAquarium(canvas, { water }) : null;
+    const diveTitle = document.querySelector(".dive-title");
+    diveTitle?.addEventListener("animationend", () => diveTitle.remove());
     let tide = tideFromClock();
     try {
       const saved = localStorage.getItem(TIDE_KEY);
@@ -102,25 +131,62 @@ function boot() {
     if (clock) startClock(clock);
     if (readout) startReadout(readout);
     applyTide(tide, tank, tideToggle);
+    tank?.onEvolve((change) => {
+      const article = (word) => (/^[aeiou]/i.test(word) ? "an" : "a");
+      showToast(`${article(change.from)} ${change.from} became ${article(change.to)} ${change.to}`);
+    });
 
     const wm = new WindowManager(desktop);
+
+    function pulseProp(button) {
+      button.classList.remove("is-pressed");
+      void button.offsetWidth;
+      button.classList.add("is-pressed");
+      window.setTimeout(() => button.classList.remove("is-pressed"), 420);
+    }
+
+    function feedFromSand() {
+      if (!tank) return;
+      if (typeof tank.feedFromSky === "function") tank.feedFromSky();
+      else tank.dropFood(window.innerWidth * 0.5, 90);
+    }
+
+    function syncPropState(button) {
+      const id = button.dataset.app;
+      if (!id) return;
+      const open = wm.isOpen(id);
+      const sleeping = typeof wm.isMinimized === "function" ? wm.isMinimized(id) : false;
+      button.classList.toggle("is-open", open);
+      button.classList.toggle("is-sleeping", sleeping);
+      button.classList.toggle("is-active", wm.focused === id && !sleeping);
+      const name = button.dataset.label || "app";
+      if (sleeping) button.setAttribute("aria-label", `Restore ${name}`);
+      else if (open) button.setAttribute("aria-label", `Focus ${name}`);
+      else button.setAttribute("aria-label", `Open ${name}`);
+    }
+
     wm.onChange = () => {
-      dockButtons.forEach((button) => {
-        const id = button.dataset.app;
-        if (!id) return;
-        button.classList.toggle("is-open", wm.isOpen(id));
-        button.classList.toggle("is-active", wm.focused === id);
-      });
+      propButtons.forEach(syncPropState);
+    };
+    wm.onClose = (rect) => {
+      tank?.burst(rect.left + rect.width / 2, rect.top + rect.height / 2, 22);
     };
 
-    dockButtons.forEach((button) => {
+    propButtons.forEach((button) => {
       button.addEventListener("click", () => {
+        pulseProp(button);
         if (button.dataset.action === "feed") {
-          tank?.dropFood(window.innerWidth * 0.5, 90);
+          button.classList.add("is-feeding");
+          window.setTimeout(() => button.classList.remove("is-feeding"), 700);
+          feedFromSand();
           return;
         }
         const app = apps[button.dataset.app];
         if (!app) return;
+        if (!wm.isOpen(app.id) || wm.isMinimized(app.id)) {
+          const rect = button.getBoundingClientRect();
+          tank?.burst(rect.left + rect.width / 2, rect.top + rect.height * 0.35);
+        }
         wm.open(fitWindow(wm, app));
       });
     });

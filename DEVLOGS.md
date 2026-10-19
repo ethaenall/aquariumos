@@ -40,19 +40,19 @@ Voters score originality, technicality, usability, and storytelling. These three
 
 **Attach:** `assets/devlogs/04-feed.png`
 
-Click empty water (or the Feed flake on the dock) and food sinks. Fish break off from wandering and actually hunt it. If you hold the cursor over them they still flinch, unless they're already going for a flake. The first version let the mouse scare them off the food every time.
+Click empty water (or the anemone bowl in the sand) and food sinks. Fish break off from wandering and actually hunt it. If you hold the cursor over them they still flinch, unless they're already going for a flake. The first version let the mouse scare them off the food every time.
 
 ### Devlog 5 — day / dusk / night
 
 **Attach:** `assets/devlogs/05-night.png`
 
-The tank follows the clock: daylight, a warmer dusk, then a darker night with a weaker surface. There's a Day button in the top bar so voters can cycle it without waiting. Night was too black at first and the dock disappeared, so I kept the glass readable.
+The tank follows the clock: daylight, a warmer dusk, then a darker night with a weaker surface. There's a Day button in the top bar so voters can cycle it without waiting. Night was too black at first and the sand props disappeared, so I kept them readable.
 
 ### Devlog 6 — windows that dock
 
 **Attach:** `assets/devlogs/06-snap.png`
 
-Windows can minimize to the dock, fill the tank, or snap to a side if you drag them to the edge. The snap ghost is a sheet of water, not a Windows rectangle. Minimize was the usability hole — people kept losing windows behind the kelp.
+Windows can minimize into their sand prop, fill the tank, or snap to a side if you drag them to the edge. The snap ghost is a sheet of water, not a Windows rectangle. Minimize was the usability hole — people kept losing windows behind the kelp.
 
 ---
 

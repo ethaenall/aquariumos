@@ -27,6 +27,14 @@ export class WindowManager {
     this.focused = null;
     this.z = 100;
     this.onChange = () => {};
+    this.onClose = () => {};
+  }
+
+  morph(el) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    el.classList.add("is-morphing");
+    window.clearTimeout(el._morph);
+    el._morph = window.setTimeout(() => el.classList.remove("is-morphing"), 360);
   }
 
   open(app) {
@@ -47,9 +55,11 @@ export class WindowManager {
     el.setAttribute("aria-labelledby", `${app.id}-title`);
     el.style.width = `${app.width}px`;
     el.style.height = `${app.height}px`;
+    if (app.accent) el.style.setProperty("--accent", app.accent);
 
     el.innerHTML = `
       <header class="window-titlebar">
+        ${app.icon ? `<span class="window-icon">${app.icon}</span>` : ""}
         <span class="window-title" id="${app.id}-title">${app.title}</span>
         <div class="window-controls">
           <button class="window-bead window-min" type="button" aria-label="Minimize ${app.title}"></button>
@@ -67,12 +77,13 @@ export class WindowManager {
     const desktop = this.desktop.getBoundingClientRect();
     const saved = readPositions()[app.id];
     const origin = this.windows.size;
+    const fit = (start, size, min, max) => Math.max(min + 8, Math.min(start, max - size - 8));
     const x = saved
       ? desktop.left + saved.left
-      : desktop.left + (app.left ?? 0.05 + origin * 0.06) * desktop.width;
+      : fit(desktop.left + (app.left ?? 0.05 + origin * 0.06) * desktop.width, el.offsetWidth, desktop.left, desktop.right);
     const y = saved
       ? desktop.top + saved.top
-      : desktop.top + (app.top ?? 0.05 + origin * 0.08) * desktop.height;
+      : fit(desktop.top + (app.top ?? 0.05 + origin * 0.08) * desktop.height, el.offsetHeight, desktop.top, desktop.bottom);
     this.place(el, x, y, el.offsetWidth, el.offsetHeight);
 
     const record = { el, app, minimized: false, maximized: false, restoreBox: null };
@@ -109,11 +120,11 @@ export class WindowManager {
       if (event.button !== 0 && event.pointerType === "mouse") return;
       if (event.target.closest(".window-controls")) return;
       this.focus(app.id);
-      if (record.maximized) this.toggleMax(app.id);
       const rect = el.getBoundingClientRect();
       drag = {
         offsetX: event.clientX - rect.left,
         offsetY: event.clientY - rect.top,
+        width: rect.width,
         startX: event.clientX,
         startY: event.clientY,
         moved: false,
@@ -125,6 +136,10 @@ export class WindowManager {
       if (!drag) return;
       if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 5) {
         drag.moved = true;
+        if (record.maximized) {
+          this.toggleMax(app.id, false);
+          drag.offsetX = el.offsetWidth * (drag.offsetX / drag.width);
+        }
       }
       if (!drag.moved) return;
       this.place(
@@ -187,6 +202,7 @@ export class WindowManager {
     const { el } = record;
     record.maximized = false;
     el.classList.remove("is-max");
+    this.morph(el);
     el.style.top = "0px";
     el.style.width = "50%";
     el.style.height = "100%";
@@ -207,16 +223,26 @@ export class WindowManager {
     const record = this.windows.get(id);
     if (!record) return;
     record.minimized = true;
-    record.el.classList.add("is-minimized");
+    const { el } = record;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.classList.add("is-minimized");
+    } else {
+      el.classList.add("is-sinking");
+      window.setTimeout(() => {
+        el.classList.remove("is-sinking");
+        if (record.minimized) el.classList.add("is-minimized");
+      }, 300);
+    }
     const remaining = [...this.windows.values()].filter((item) => !item.minimized).at(-1);
     this.focused = remaining?.app.id ?? null;
     if (remaining) this.focus(remaining.app.id);
     else this.onChange();
   }
 
-  toggleMax(id) {
+  toggleMax(id, animate = true) {
     const record = this.windows.get(id);
     if (!record) return;
+    if (animate) this.morph(record.el);
     if (record.maximized) {
       record.maximized = false;
       record.el.classList.remove("is-max");
@@ -245,7 +271,7 @@ export class WindowManager {
     const record = this.windows.get(id);
     if (!record) return;
     record.minimized = false;
-    record.el.classList.remove("is-minimized");
+    record.el.classList.remove("is-minimized", "is-sinking");
     this.focus(id);
   }
 
@@ -293,6 +319,7 @@ export class WindowManager {
     if (cleanup && typeof cleanup.cleanup === "function") cleanup.cleanup();
 
     this.windows.delete(id);
+    this.onClose(record.el.getBoundingClientRect());
     const remaining = [...this.windows.values()].filter((item) => !item.minimized).at(-1);
     this.focused = remaining?.app.id ?? null;
     if (remaining) this.focus(remaining.app.id);
@@ -320,5 +347,9 @@ export class WindowManager {
 
   isOpen(id) {
     return this.windows.has(id);
+  }
+
+  isMinimized(id) {
+    return Boolean(this.windows.get(id)?.minimized);
   }
 }

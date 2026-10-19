@@ -1,0 +1,13 @@
+name: Ship safe
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for personal data and ship-breaking issues
+        run: python3 scripts/ship-safe.py
