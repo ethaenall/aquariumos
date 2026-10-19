@@ -2164,11 +2164,11 @@ body[data-tide="night"] .sand-prop-label {
   opacity: 0;
   transition: opacity 1.4s ease;
   background: radial-gradient(
-    circle 320px at var(--lx, 50%) var(--ly, 45%),
-    rgba(255, 214, 150, 0.16),
-    rgba(255, 196, 120, 0.05) 28%,
-    rgba(1, 5, 12, 0.4) 70%,
-    rgba(1, 5, 12, 0.64) 100%
+    circle var(--lr, 380px) at var(--lx, 50%) var(--ly, 45%),
+    rgba(255, 214, 160, 0.1),
+    rgba(255, 200, 140, 0.04) 35%,
+    rgba(1, 6, 14, 0.2) 62%,
+    rgba(1, 6, 14, 0.46) 100%
   );
 }
 

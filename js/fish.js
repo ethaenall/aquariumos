@@ -807,9 +807,9 @@ export class Fish {
       const dx = mouse.x - this.x;
       const dy = mouse.y - this.y;
       const dist = Math.hypot(dx, dy);
-      const reach = 420 + this.drawn * 2;
+      const reach = 560 + this.drawn * 2;
       if (dist < reach && dist > 0.001) {
-        const ring = 58 + this.drawn * 1.6;
+        const ring = 90 + this.drawn * 2.2;
         const pull = ((dist - ring) / reach) * 0.09 * lure;
         const swirl = 0.03 * lure * (this.z > 0.5 ? 1 : -1);
         this.vx += (dx / dist) * pull - (dy / dist) * swirl;

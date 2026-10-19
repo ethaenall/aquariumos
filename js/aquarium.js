@@ -1,5 +1,5 @@
-import { DART_LINE, Fish, LINES, loadSchool, mealsToNext, rand, saveSchool } from "./fish.js?v=202610191223";
-import { sandBack, sandFront } from "./seabed.js?v=202610191223";
+import { DART_LINE, Fish, LINES, loadSchool, mealsToNext, rand, saveSchool } from "./fish.js?v=202610191453";
+import { sandBack, sandFront } from "./seabed.js?v=202610191453";
 
 const TAU = Math.PI * 2;
 const TIDE_LEVEL = { day: 0, dusk: 1, night: 2 };
@@ -348,6 +348,7 @@ export function startAquarium(canvas, { water = null, veil = null, overlay = nul
   let vents = [];
   let width = 0;
   let height = 0;
+  let lampR = 360;
   let raf = 0;
   let lastRipple = 0;
   let wakeTick = 0;
@@ -371,6 +372,8 @@ export function startAquarium(canvas, { water = null, veil = null, overlay = nul
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    lampR = clamp(Math.min(width, height) * 0.46, 220, 480);
+    veil?.style.setProperty("--lr", `${lampR}px`);
     if (overlay) {
       overlay.width = canvas.width;
       overlay.height = canvas.height;
@@ -602,7 +605,8 @@ export function startAquarium(canvas, { water = null, veil = null, overlay = nul
       }
       if (mouse.on) {
         const d = Math.hypot(mote.x - mouse.x, mote.y - mouse.y);
-        if (d < 130) mote.flare = Math.max(mote.flare, 1 - d / 130);
+        const reach = lure > 0.05 ? lampR * 0.8 : 130;
+        if (d < reach) mote.flare = Math.max(mote.flare, (1 - d / reach) * (lure > 0.05 ? 0.7 : 1));
       }
       mote.flare *= 0.985;
     });
@@ -774,18 +778,28 @@ export function startAquarium(canvas, { water = null, veil = null, overlay = nul
         ctx.fillRect(0, 0, width, height);
       }
       if (night > 0.01) {
-        ctx.fillStyle = `rgba(2, 8, 24, ${0.6 * night})`;
+        // The lantern keeps fish inside its light in their true colours.
+        const dark = 0.6 * night;
+        if (lure > 0.01) {
+          const shade = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, lampR);
+          shade.addColorStop(0, `rgba(2, 8, 24, ${dark * (1 - 0.85 * lure)})`);
+          shade.addColorStop(0.6, `rgba(2, 8, 24, ${dark * (1 - 0.5 * lure)})`);
+          shade.addColorStop(1, `rgba(2, 8, 24, ${dark})`);
+          ctx.fillStyle = shade;
+        } else {
+          ctx.fillStyle = `rgba(2, 8, 24, ${dark})`;
+        }
         ctx.fillRect(0, 0, width, height);
       }
     }
 
     ctx.globalCompositeOperation = "lighter";
     if (lure > 0.01) {
-      const g = 150 + Math.sin(time * 0.004) * 8;
-      ctx.globalAlpha = 0.8 * lure;
+      const g = lampR * (0.85 + Math.sin(time * 0.003) * 0.03);
+      ctx.globalAlpha = 0.4 * lure;
       ctx.drawImage(art.amber, mouse.x - g, mouse.y - g, g * 2, g * 2);
-      ctx.globalAlpha = lure;
-      ctx.drawImage(art.amber, mouse.x - 22, mouse.y - 22, 44, 44);
+      ctx.globalAlpha = 0.45 * lure;
+      ctx.drawImage(art.amber, mouse.x - 12, mouse.y - 12, 24, 24);
     }
     const glowAmt = night + dusk * 0.35;
     if (glowAmt > 0.01) {

@@ -1,4 +1,4 @@
-import { createGuide } from "./guide.js?v=202610191223";
+import { createGuide } from "./guide.js?v=202610191453";
 
 const NOTES_KEY = "aquariumos.notes";
 const context = { tank: null };
