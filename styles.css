@@ -59,6 +59,8 @@ button {
   position: fixed;
   inset: 0;
   z-index: 0;
+  transform-origin: 50% 30%;
+  animation: dive-settle 3.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   background:
     radial-gradient(ellipse 90% 55% at 50% -8%, rgba(150, 220, 230, 0.5), transparent 58%),
     radial-gradient(ellipse 45% 35% at 18% 78%, rgba(24, 92, 82, 0.28), transparent 70%),
@@ -1589,7 +1591,7 @@ body.is-ready .sand-prop {
 .feed-cue {
   position: fixed;
   left: 50%;
-  top: 58%;
+  top: 50%;
   z-index: 9;
   width: 0;
   height: 0;
@@ -1604,10 +1606,10 @@ body.is-ready .sand-prop {
 
 .feed-cue span {
   position: absolute;
-  left: -36px;
-  top: -36px;
-  width: 72px;
-  height: 72px;
+  left: -48px;
+  top: -48px;
+  width: 96px;
+  height: 96px;
   border-radius: 50%;
   border: 1.5px solid rgba(240, 214, 150, 0.7);
   animation: feed-cue-ring 2.4s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
@@ -1637,6 +1639,39 @@ body.is-ready .sand-prop {
 .feed-cue i:nth-of-type(3) {
   left: 9px;
   animation-delay: 1s;
+}
+
+.feed-cue b {
+  position: absolute;
+  left: 0;
+  top: 58px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f6dca0;
+  text-shadow: 0 0 14px rgba(240, 190, 100, 0.8), 0 2px 8px rgba(0, 10, 16, 0.7);
+  animation: feed-cue-label 2.4s ease-in-out infinite;
+}
+
+@keyframes feed-cue-label {
+  50% { opacity: 0.55; }
+}
+
+@keyframes dive-settle {
+  from {
+    transform: scale(1.12);
+    filter: blur(5px) brightness(1.3) saturate(1.2);
+  }
+  45% {
+    filter: blur(0) brightness(1.08);
+  }
+  to {
+    transform: none;
+    filter: none;
+  }
 }
 
 @keyframes divelog-in {
@@ -2353,6 +2388,8 @@ body[data-tide="night"] .night-veil.is-lit {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .aquarium,
+  .feed-cue b,
   .divelog,
   .divelog-text,
   .divelog-dots i,

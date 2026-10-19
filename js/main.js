@@ -1,9 +1,9 @@
-import { startAquarium } from "./aquarium.js";
-import { startWater } from "./water.js";
-import { WindowManager } from "./windows.js";
-import { apps, bindTank } from "./apps.js";
-import { startSonar } from "./sonar.js";
-import { startDiveLog } from "./divelog.js";
+import { startAquarium } from "./aquarium.js?v=202610191223";
+import { startWater } from "./water.js?v=202610191223";
+import { WindowManager } from "./windows.js?v=202610191223";
+import { apps, bindTank } from "./apps.js?v=202610191223";
+import { startSonar } from "./sonar.js?v=202610191223";
+import { startDiveLog } from "./divelog.js?v=202610191223";
 
 const TIDES = ["day", "dusk", "night"];
 const TIDE_LABEL = { day: "Day", dusk: "Dusk", night: "Night" };

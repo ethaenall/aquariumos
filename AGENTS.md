@@ -10,6 +10,12 @@ python3 scripts/ship-safe.py
 
 Stop if it fails.
 
+Before each deploy to `main`, refresh the cache stamp so returning visitors never mix old and new modules:
+
+```bash
+python3 scripts/bump-cache.py
+```
+
 ## Credit
 
 Author credit is GitHub user **ethaenall**.

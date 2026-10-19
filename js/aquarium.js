@@ -1,5 +1,5 @@
-import { DART_LINE, Fish, LINES, loadSchool, mealsToNext, rand, saveSchool } from "./fish.js";
-import { sandBack, sandFront } from "./seabed.js";
+import { DART_LINE, Fish, LINES, loadSchool, mealsToNext, rand, saveSchool } from "./fish.js?v=202610191223";
+import { sandBack, sandFront } from "./seabed.js?v=202610191223";
 
 const TAU = Math.PI * 2;
 const TIDE_LEVEL = { day: 0, dusk: 1, night: 2 };
@@ -10,6 +10,9 @@ const PING_MS = 3400;
 // After the dive, the school gathers under the title for a moment.
 const RALLY_FROM = 700;
 const RALLY_MS = 4200;
+// A first visit meets a few grown residents, so the tank looks alive from the
+// first frame. The other four lines still start as babies to grow.
+const RESIDENTS = { teal: 6, orange: 6, blue: 6, copper: 6 };
 
 const HAZE = {
   day: [16, 84, 104],
@@ -427,7 +430,9 @@ export function startAquarium(canvas, { water = null, veil = null, overlay = nul
     bubbles.length = 0;
     // The school is saved in depth order, so match progress by line id, not slot.
     const saved = loadSchool();
+    const fresh = saved.length === 0;
     const mealsFor = (id) => {
+      if (fresh) return RESIDENTS[id] ?? 0;
       const at = saved.findIndex((entry) => entry?.id === id);
       if (at < 0) return 0;
       const [entry] = saved.splice(at, 1);

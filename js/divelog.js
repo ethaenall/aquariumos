@@ -49,7 +49,7 @@ export function startDiveLog({ delay = 0, onGuide, onFinish } = {}) {
   const cue = document.createElement("div");
   cue.className = "feed-cue";
   cue.setAttribute("aria-hidden", "true");
-  cue.innerHTML = "<span></span><span></span><i></i><i></i><i></i>";
+  cue.innerHTML = `<span></span><span></span><i></i><i></i><i></i><b>${touch ? "tap" : "click"} to feed</b>`;
 
   const text = card.querySelector(".divelog-text");
   const dots = [...card.querySelectorAll(".divelog-dots i")];

@@ -11,6 +11,7 @@ Glass windows float in dark water. Fish grow into new forms when you feed them, 
 ## Features
 
 - A dive-in intro: the surface drops away, and the school gathers under the title to meet you
+- New visitors meet a few grown residents (an angelfish, a koi, a ray, a lanternfish); four more lines start as babies to grow
 - A four-step Dive log on your first visit: feed, grow a new form, ping a fish with Sonar, then bring the lantern out at night
 - Interactive water with moving light patterns, ripples, kelp, and a sandy seabed
 - Feed fish to grow and change their forms; progress stays in this browser
@@ -69,4 +70,5 @@ Fonts: [Fraunces](https://fonts.google.com/specimen/Fraunces) and [Outfit](https
   scripts/
     generate-tide-lights.py
     ship-safe.py   # blocks personal data before ship
+    bump-cache.py  # stamps ?v= on scripts and styles before each deploy
 ```
