@@ -1,4 +1,4 @@
-import { duneGlsl } from "./seabed.js?v=202610191453";
+import { duneGlsl } from "./seabed.js?v=202610201453";
 
 const VERTEX = `
 attribute vec2 aPos;
